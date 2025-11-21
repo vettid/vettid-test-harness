@@ -1,0 +1,31 @@
+{
+  "name": "vettid-test-harness",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "test:debug": "playwright test --debug",
+    "test:registration": "playwright test tests/e2e/registration",
+    "test:auth": "playwright test tests/e2e/auth",
+    "test:account": "playwright test tests/e2e/account",
+    "test:membership": "playwright test tests/e2e/membership",
+    "test:journey": "playwright test tests/e2e/full-journey.spec.ts",
+    "report": "playwright show-report",
+    "codegen": "playwright codegen"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "Automated test harness for VettID application using Playwright",
+  "devDependencies": {
+    "@playwright/test": "^1.56.1",
+    "@types/node": "^24.10.1",
+    "dotenv": "^17.2.3",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.937.0"
+  }
+}
