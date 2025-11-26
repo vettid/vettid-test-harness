@@ -11,8 +11,8 @@ import { test, expect } from '@playwright/test';
  * - Form functionality
  */
 
-const ADMIN_URL = process.env.ADMIN_URL || 'https://admin.vettid.dev';
-const BASE_URL = process.env.BASE_URL || 'https://account.vettid.dev';
+const ADMIN_URL = process.env.ADMIN_URL || 'https://vettid.dev/admin';
+const BASE_URL = process.env.BASE_URL || 'https://vettid.dev';
 
 test.describe('Admin Site - Page Load Tests', () => {
 

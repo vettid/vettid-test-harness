@@ -12,7 +12,7 @@ import { test, expect } from '@playwright/test';
  * - Error states
  */
 
-const BASE_URL = process.env.BASE_URL || 'https://account.vettid.dev';
+const BASE_URL = process.env.BASE_URL || 'https://vettid.dev';
 
 test.describe('Main Site - Page Load Tests', () => {
 

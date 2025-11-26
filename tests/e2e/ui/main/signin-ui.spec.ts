@@ -11,7 +11,7 @@ import { test, expect } from '@playwright/test';
  * - Magic link flow
  */
 
-const BASE_URL = process.env.BASE_URL || 'https://account.vettid.dev';
+const BASE_URL = process.env.BASE_URL || 'https://vettid.dev';
 
 test.describe('Sign-In Page - Structure', () => {
 
