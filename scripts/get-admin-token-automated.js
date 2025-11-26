@@ -87,7 +87,7 @@ async function main() {
   // Launch browser with persistent context to reuse cookies
   const userDataDir = path.join(__dirname, '..', '.playwright-admin');
   const context = await chromium.launchPersistentContext(userDataDir, {
-    headless: false, // Keep visible so user can see what's happening
+    headless: false, // Show browser (use xvfb-run if no X server)
     viewport: { width: 1280, height: 720 }
   });
 
