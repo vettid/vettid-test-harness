@@ -2,7 +2,37 @@
 
 Based on the test findings in `TEST_ISSUES.md` and `TEST_RESULTS_2025-12-02.md`, the following fixes have been deployed to the VettID API.
 
-## Latest Fix (Round 3)
+## Latest Fix (Round 4)
+
+### ✅ PIN Disable Endpoint ValidationError Handling - FIXED
+
+**Issue:** `POST /account/security/pin/disable` returned 500 when no body was sent.
+
+**Root Cause:** The `parseJsonBody` function throws a `ValidationError` when the body is missing, but the catch block only returned 500 instead of handling it as a 400.
+
+**Fix:** Added proper `ValidationError` handling with fallback name check:
+```typescript
+if (error instanceof ValidationError || (error as any)?.name === 'ValidationError') {
+  return badRequest((error as Error).message);
+}
+```
+
+Also applied the same fix to `updatePin.ts` for consistency.
+
+**Commit:** `89c1186`
+
+**Tests that should now pass:**
+- PIN-DISABLE-002: Now returns 400 instead of 500 when body is missing
+
+### Clarifications on "Issues"
+
+**Account Cancel returns 404:** This is expected behavior when the test user doesn't have an approved registration. The endpoint is working correctly.
+
+**Terms API field names:** The API consistently uses `terms_text` and `download_url` (not `text` and `pdf_url`). Tests have already been updated to expect the correct field names.
+
+---
+
+## Previous Fix (Round 3)
 
 ### ✅ Pagination Off-by-One Issue - FIXED
 
