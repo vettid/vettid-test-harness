@@ -77,7 +77,7 @@ test.describe('Request Membership', () => {
       const response = await apiClient.makeRequest('POST', '/account/membership/request', {});
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toMatch(/terms|version/i);
+      expect(response.body.message).toMatch(/terms|version/i);
     });
 
     test('MEMREQ-006: Rejects invalid terms_version_id', async () => {
@@ -93,7 +93,7 @@ test.describe('Request Membership', () => {
       });
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toMatch(/terms|invalid|not found/i);
+      expect(response.body.message).toMatch(/terms|invalid|not found/i);
     });
 
     test('MEMREQ-007: Accepts valid terms_version_id', async () => {
@@ -190,7 +190,7 @@ test.describe('Request Membership', () => {
 
       // Should reject duplicate
       expect(response.status).toBe(400);
-      expect(response.body.error).toMatch(/already|pending|exist/i);
+      expect(response.body.message).toMatch(/already|pending|exist/i);
     });
 
     test('MEMREQ-012: Rejects request when already approved', async () => {
@@ -206,7 +206,7 @@ test.describe('Request Membership', () => {
       });
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toMatch(/already.*approved|already.*member/i);
+      expect(response.body.message).toMatch(/already.*approved|already.*member/i);
     });
   });
 });
@@ -452,7 +452,7 @@ test.describe('Get Membership Terms', () => {
       await apiClient.expectStatusOneOf(response, [200, 404]);
 
       if (response.status === 404) {
-        expect(response.body.error).toMatch(/terms|not found/i);
+        expect(response.body.message).toMatch(/terms|not found/i);
       }
     });
   });

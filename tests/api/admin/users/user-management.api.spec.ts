@@ -113,7 +113,7 @@ test.describe('Disable User', () => {
       const response = await apiClient.disableUser(process.env.DISABLED_USER_ID);
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toMatch(/already.*disabled/i);
+      expect(response.body.message).toMatch(/already.*disabled/i);
     });
   });
 
@@ -207,7 +207,7 @@ test.describe('Enable User', () => {
       const response = await apiClient.enableUser(process.env.ACTIVE_USER_ID);
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toMatch(/already.*enabled|not.*disabled/i);
+      expect(response.body.message).toMatch(/already.*enabled|not.*disabled/i);
     });
 
     test('USER-ENABLE-006: Cannot enable deleted user', async () => {
@@ -221,7 +221,7 @@ test.describe('Enable User', () => {
       const response = await apiClient.enableUser(process.env.DELETED_USER_ID);
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toMatch(/deleted|cannot.*enable/i);
+      expect(response.body.message).toMatch(/deleted|cannot.*enable/i);
     });
   });
 
@@ -309,7 +309,7 @@ test.describe('Delete User (Soft Delete)', () => {
       const response = await apiClient.deleteUser(process.env.DELETED_USER_ID);
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toMatch(/already.*deleted/i);
+      expect(response.body.message).toMatch(/already.*deleted/i);
     });
   });
 

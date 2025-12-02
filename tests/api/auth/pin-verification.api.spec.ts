@@ -30,7 +30,7 @@ test.describe('PIN Security System', () => {
         expect(response.body.message || response.body.success).toBeTruthy();
       } else if (response.status === 400) {
         // PIN might already be enabled
-        expect(response.body.error).toMatch(/already.*enabled/i);
+        expect(response.body.message).toMatch(/already.*enabled/i);
       }
     });
 
@@ -83,7 +83,7 @@ test.describe('PIN Security System', () => {
       const response = await apiClient.enablePin('123');
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toMatch(/pin.*4|digit|length|short/i);
+      expect(response.body.message).toMatch(/pin.*4|digit|length|short/i);
     });
 
     test('PIN-005: Reject PIN with more than 6 digits', async () => {
@@ -100,7 +100,7 @@ test.describe('PIN Security System', () => {
       const response = await apiClient.enablePin('1234567');
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toMatch(/pin.*6|digit|length|long/i);
+      expect(response.body.message).toMatch(/pin.*6|digit|length|long/i);
     });
 
     test('PIN-006: Reject PIN with non-numeric characters', async () => {
@@ -267,7 +267,7 @@ test.describe('PIN Security System', () => {
       // Should either succeed idempotently or reject with clear message
       await apiClient.expectStatusOneOf(response, [200, 400]);
       if (response.status === 400) {
-        expect(response.body.error).toMatch(/not.*enabled|already.*disabled/i);
+        expect(response.body.message).toMatch(/not.*enabled|already.*disabled/i);
       }
     });
 
@@ -337,7 +337,7 @@ test.describe('PIN Security System', () => {
       const response = await apiClient.updatePin('5678', '9999');
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toMatch(/current.*pin|invalid.*pin|incorrect/i);
+      expect(response.body.message).toMatch(/current.*pin|invalid.*pin|incorrect/i);
     });
 
     test('PIN-020: Update PIN when not enabled', async () => {
@@ -355,7 +355,7 @@ test.describe('PIN Security System', () => {
       const response = await apiClient.updatePin('5678', '1234');
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toMatch(/not.*enabled/i);
+      expect(response.body.message).toMatch(/not.*enabled/i);
     });
 
     test('PIN-021: Update PIN validates new PIN format', async () => {

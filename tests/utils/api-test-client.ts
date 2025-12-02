@@ -86,9 +86,17 @@ export class APITestClient extends APIHelpers {
     expect(response.status).toBe(expectedStatus);
 
     if (messageContains) {
-      const errorMessage = response.body?.error || response.body?.message || '';
+      // API uses 'message' field for errors, fall back to 'error' for compatibility
+      const errorMessage = response.body?.message || response.body?.error || '';
       expect(errorMessage.toLowerCase()).toContain(messageContains.toLowerCase());
     }
+  }
+
+  /**
+   * Get error message from response body (handles both 'message' and 'error' fields)
+   */
+  getErrorMessage(response: any): string {
+    return response.body?.message || response.body?.error || '';
   }
 
   /**
@@ -109,14 +117,15 @@ export class APITestClient extends APIHelpers {
   /**
    * Make a generic HTTP request with method and path
    */
-  async request(
+  async makeRequest(
     method: string,
     path: string,
     body?: any
   ): Promise<{ status: number; body: any }> {
     const url = `${this.getApiUrl()}${path}`;
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'Origin': 'https://admin.vettid.dev'
     };
 
     if (this.currentToken) {
@@ -155,7 +164,7 @@ export class APITestClient extends APIHelpers {
     }>
   ): Promise<Array<{ status: number; body: any }>> {
     const promises = requests.map(req =>
-      this.request(req.method, req.path, req.body)
+      this.makeRequest(req.method, req.path, req.body)
     );
 
     return Promise.all(promises);
@@ -165,7 +174,7 @@ export class APITestClient extends APIHelpers {
    * Get API URL from environment
    */
   private getApiUrl(): string {
-    return process.env.API_URL || 'https://cgccjd4djg.execute-api.us-east-1.amazonaws.com';
+    return this.baseURL;
   }
 
   /**
@@ -173,7 +182,7 @@ export class APITestClient extends APIHelpers {
    */
   private getRequest(): APIRequestContext {
     // Access the protected request property from parent
-    return (this as any).request;
+    return this.request;
   }
 
   // Additional admin endpoints for testing
@@ -182,70 +191,70 @@ export class APITestClient extends APIHelpers {
    * Disable user (admin only)
    */
   async disableUser(userId: string): Promise<{ status: number; body: any }> {
-    return this.request('POST', `/admin/users/${userId}/disable`);
+    return this.makeRequest('POST', `/admin/users/${userId}/disable`);
   }
 
   /**
    * Enable user (admin only)
    */
   async enableUser(userId: string): Promise<{ status: number; body: any }> {
-    return this.request('POST', `/admin/users/${userId}/enable`);
+    return this.makeRequest('POST', `/admin/users/${userId}/enable`);
   }
 
   /**
    * Delete user (admin only)
    */
   async deleteUser(userId: string): Promise<{ status: number; body: any }> {
-    return this.request('DELETE', `/admin/users/${userId}`);
+    return this.makeRequest('DELETE', `/admin/users/${userId}`);
   }
 
   /**
    * Permanently delete user (admin only)
    */
   async permanentlyDeleteUser(userId: string): Promise<{ status: number; body: any }> {
-    return this.request('POST', `/admin/users/${userId}/permanently-delete`);
+    return this.makeRequest('POST', `/admin/users/${userId}/permanently-delete`);
   }
 
   /**
    * Get user details (admin only)
    */
   async getUser(userId: string): Promise<{ status: number; body: any }> {
-    return this.request('GET', `/admin/users/${userId}`);
+    return this.makeRequest('GET', `/admin/users/${userId}`);
   }
 
   /**
    * Expire invite (admin only)
    */
   async expireInvite(code: string): Promise<{ status: number; body: any }> {
-    return this.request('POST', `/admin/invites/${code}/expire`);
+    return this.makeRequest('POST', `/admin/invites/${code}/expire`);
   }
 
   /**
    * Delete invite (admin only)
    */
   async deleteInvite(code: string): Promise<{ status: number; body: any }> {
-    return this.request('DELETE', `/admin/invites/${code}`);
+    return this.makeRequest('DELETE', `/admin/invites/${code}`);
   }
 
   /**
    * Get registration by ID (admin only)
    */
   async getRegistration(id: string): Promise<{ status: number; body: any }> {
-    return this.request('GET', `/admin/registrations/${id}`);
+    return this.makeRequest('GET', `/admin/registrations/${id}`);
   }
 
   /**
    * Approve membership (admin only)
    */
   async approveMembership(id: string): Promise<{ status: number; body: any }> {
-    return this.request('POST', `/admin/memberships/${id}/approve`);
+    return this.makeRequest('POST', `/admin/membership-requests/${id}/approve`);
   }
 
   /**
    * Deny membership (admin only)
    */
   async denyMembership(id: string, reason?: string): Promise<{ status: number; body: any }> {
-    return this.request('POST', `/admin/memberships/${id}/deny`, {
+    return this.makeRequest('POST', `/admin/membership-requests/${id}/deny`, {
       reason: reason || 'Test denial'
     });
   }
@@ -254,7 +263,7 @@ export class APITestClient extends APIHelpers {
    * Update PIN (member only)
    */
   async updatePin(newPin: string, currentPin: string): Promise<{ status: number; body: any }> {
-    return this.request('POST', '/account/pin/update', {
+    return this.makeRequest('POST', '/account/security/pin/update', {
       pin: newPin,
       current_pin: currentPin
     });
@@ -264,14 +273,14 @@ export class APITestClient extends APIHelpers {
    * Get membership terms (member only)
    */
   async getMembershipTerms(): Promise<{ status: number; body: any }> {
-    return this.request('GET', '/account/membership/terms');
+    return this.makeRequest('GET', '/account/membership/terms');
   }
 
   /**
    * Create membership terms (admin only)
    */
   async createMembershipTerms(termsText: string): Promise<{ status: number; body: any }> {
-    return this.request('POST', '/admin/memberships/terms', {
+    return this.makeRequest('POST', '/admin/membership-terms', {
       terms_text: termsText
     });
   }
@@ -279,8 +288,31 @@ export class APITestClient extends APIHelpers {
   /**
    * List all membership requests (admin only)
    */
-  async listMembershipRequests(): Promise<{ status: number; body: any }> {
-    return this.request('GET', '/admin/memberships');
+  async listMembershipRequests(params?: { membership_status?: string; limit?: number }): Promise<{ status: number; body: any }> {
+    let path = '/admin/membership-requests';
+    if (params) {
+      const queryParams = new URLSearchParams();
+      if (params.membership_status) queryParams.append('membership_status', params.membership_status);
+      if (params.limit) queryParams.append('limit', params.limit.toString());
+      if (queryParams.toString()) path += `?${queryParams.toString()}`;
+    }
+    return this.makeRequest('GET', path);
+  }
+
+  /**
+   * List all membership terms (admin only)
+   */
+  async listMembershipTerms(params?: { limit?: number }): Promise<{ status: number; body: any }> {
+    let path = '/admin/membership-terms';
+    if (params?.limit) path += `?limit=${params.limit}`;
+    return this.makeRequest('GET', path);
+  }
+
+  /**
+   * Get current membership terms (admin only)
+   */
+  async getCurrentMembershipTerms(): Promise<{ status: number; body: any }> {
+    return this.makeRequest('GET', '/admin/membership-terms/current');
   }
 
   /**
@@ -292,6 +324,6 @@ export class APITestClient extends APIHelpers {
     expires_at?: string;
     auto_approve?: boolean;
   }): Promise<{ status: number; body: any }> {
-    return this.request('POST', '/admin/invites', options);
+    return this.makeRequest('POST', '/admin/invites', options);
   }
 }

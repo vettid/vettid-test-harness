@@ -144,7 +144,7 @@ test.describe('Cancel Account', () => {
       const response = await apiClient.cancelAccount();
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toMatch(/already.*deleted|already.*cancel/i);
+      expect(response.body.message).toMatch(/already.*deleted|already.*cancel/i);
     });
 
     test('CANCEL-010: Cannot cancel disabled account', async () => {

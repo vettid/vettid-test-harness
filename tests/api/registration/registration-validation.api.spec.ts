@@ -566,9 +566,10 @@ test.describe('Registration Response Validation', () => {
     });
 
     expect(response.status).toBe(400);
-    expect(response.body).toHaveProperty('error');
-    expect(typeof response.body.error).toBe('string');
-    expect(response.body.error.length).toBeGreaterThan(0);
+    // API uses 'message' field for errors
+    expect(response.body).toHaveProperty('message');
+    expect(typeof response.body.message).toBe('string');
+    expect(response.body.message.length).toBeGreaterThan(0);
   });
 
   test('REG-VAL-043: Response headers include correct content-type', async () => {

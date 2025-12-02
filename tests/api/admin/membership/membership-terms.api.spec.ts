@@ -65,7 +65,7 @@ test.describe('Create Membership Terms', () => {
       const response = await apiClient.createMembershipTerms('');
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toMatch(/text|required|empty/i);
+      expect(response.body.message).toMatch(/text|required|empty/i);
     });
 
     test('TERMS-CREATE-005: Rejects whitespace-only terms text', async () => {
