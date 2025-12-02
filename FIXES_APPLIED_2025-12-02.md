@@ -2,6 +2,23 @@
 
 Based on the test findings in `TEST_ISSUES.md` and `TEST_RESULTS_2025-12-02.md`, the following fixes have been deployed to the VettID API.
 
+## Latest Fix (Round 3)
+
+### ✅ Pagination Off-by-One Issue - FIXED
+
+**Issue:** `/admin/membership-requests?limit=5` could return more items than requested.
+
+**Root Cause:** The endpoint had no pagination implementation at all.
+
+**Fix:** Added proper pagination support with `limit` and `offset` query parameters:
+- `limit`: Number of items to return (1-100, default 100)
+- `offset`: Number of items to skip (default 0)
+- Response now includes: `{ registrations, total, limit, offset }`
+
+**Commit:** `197e5aa`
+
+---
+
 ## Latest Fix (Round 2)
 
 ### ✅ 500 Error for Non-Existent Membership Request IDs - FIXED
