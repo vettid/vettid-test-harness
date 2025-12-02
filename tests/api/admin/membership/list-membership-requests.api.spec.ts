@@ -229,14 +229,18 @@ test.describe('List Membership Requests', () => {
       const response = await apiClient.makeRequest('GET', '/admin/membership-requests?limit=5');
 
       if (response.status === 200) {
-        // API returns { registrations: [...] }
+        // API returns { registrations: [...], total, limit, offset }
         const items = response.body.registrations || response.body.items || response.body;
-        // Note: API may return limit+1 items (off-by-one), accepting up to 6 for limit=5
-        expect(items.length).toBeLessThanOrEqual(6);
+        expect(items.length).toBeLessThanOrEqual(5);
+
+        // Verify pagination metadata if present
+        if (response.body.limit !== undefined) {
+          expect(response.body.limit).toBe(5);
+        }
       }
     });
 
-    test('MEMBERSHIP-LIST-014: Supports pagination token', async () => {
+    test('MEMBERSHIP-LIST-014: Supports offset pagination', async () => {
       if (!process.env.ADMIN_TOKEN) {
         test.skip();
         return;
@@ -244,17 +248,24 @@ test.describe('List Membership Requests', () => {
 
       apiClient.withAdminAuth();
 
-      // Get first page with small limit
-      const firstPage = await apiClient.makeRequest('GET', '/admin/memberships?limit=2');
+      // Get first page
+      const firstPage = await apiClient.makeRequest('GET', '/admin/membership-requests?limit=2&offset=0');
 
-      if (firstPage.status === 200 && firstPage.body.next_token) {
-        // Get next page
-        const nextPage = await apiClient.makeRequest(
-          'GET',
-          `/admin/memberships?limit=2&next_token=${firstPage.body.next_token}`
-        );
+      if (firstPage.status === 200) {
+        const firstItems = firstPage.body.registrations || firstPage.body.items || [];
 
-        expect(nextPage.status).toBe(200);
+        // Get second page if there are more items
+        if (firstPage.body.total > 2) {
+          const secondPage = await apiClient.makeRequest('GET', '/admin/membership-requests?limit=2&offset=2');
+
+          expect(secondPage.status).toBe(200);
+          const secondItems = secondPage.body.registrations || secondPage.body.items || [];
+
+          // Ensure items are different (no overlap)
+          if (firstItems.length > 0 && secondItems.length > 0) {
+            expect(firstItems[0].registration_id).not.toBe(secondItems[0].registration_id);
+          }
+        }
       }
     });
 
