@@ -348,8 +348,8 @@ test.describe('Disable PIN', () => {
 
       const response = await apiClient.makeRequest('POST', '/account/security/pin/disable');
 
-      // Should get past auth - may return 500 if endpoint has issues
-      await apiClient.expectStatusOneOf(response, [200, 400, 404, 500]);
+      // Should get past auth - now returns 400 for missing body (fixed in commit 89c1186)
+      await apiClient.expectStatusOneOf(response, [200, 400, 404]);
     });
   });
 
@@ -365,8 +365,8 @@ test.describe('Disable PIN', () => {
 
       const response = await apiClient.makeRequest('POST', '/account/security/pin/disable');
 
-      // API may return 500 for unimplemented or erroring endpoint
-      await apiClient.expectStatusOneOf(response, [400, 404, 500]);
+      // Should return 400 for validation error (fixed in commit 89c1186)
+      await apiClient.expectStatusOneOf(response, [400, 404]);
     });
   });
 });
