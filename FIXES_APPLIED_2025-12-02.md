@@ -1,6 +1,23 @@
 # Fixes Applied - December 2, 2025
 
-Based on the test findings in `TEST_ISSUES.md`, the following fixes have been deployed to the VettID API.
+Based on the test findings in `TEST_ISSUES.md` and `TEST_RESULTS_2025-12-02.md`, the following fixes have been deployed to the VettID API.
+
+## Latest Fix (Round 2)
+
+### ✅ 500 Error for Non-Existent Membership Request IDs - FIXED
+
+**Issue:** `POST /admin/membership-requests/{id}/approve` and `POST /admin/membership-requests/{id}/deny` returned 500 instead of 404 for non-existent IDs.
+
+**Root Cause:** The `instanceof NotFoundError` check was failing due to how JavaScript classes work across esbuild module boundaries.
+
+**Fix:** Added fallback error name check: `error instanceof NotFoundError || error?.name === 'NotFoundError'`
+
+**Commit:** `355991e`
+
+**Tests that should now pass:**
+- Approve/deny membership with non-existent ID should return 404
+
+---
 
 ## Fixes Applied
 
