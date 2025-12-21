@@ -71,13 +71,8 @@ test.describe('Admin Endpoint Authorization', () => {
     });
 
     test('AUTH-ADMIN-INVALID-003: Admin endpoints reject token for wrong user pool', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
       // Use member token on admin endpoint
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       const response = await apiClient.makeRequest('GET', '/admin/registrations');
 
@@ -90,12 +85,7 @@ test.describe('Admin Endpoint Authorization', () => {
 
     for (const endpoint of adminEndpoints.slice(0, 5)) {
       test(`AUTH-ADMIN-MEMBER-${endpoint.name.replace(/\s+/g, '-')}: ${endpoint.name} rejects member token`, async () => {
-        if (!process.env.MEMBER_TOKEN) {
-          test.skip();
-          return;
-        }
-
-        apiClient.withAuth(process.env.MEMBER_TOKEN);
+        await apiClient.withMemberAuthAsync();
 
         const response = await apiClient.makeRequest(endpoint.method, endpoint.path);
 
@@ -107,12 +97,7 @@ test.describe('Admin Endpoint Authorization', () => {
   test.describe('Valid Admin Token', () => {
 
     test('AUTH-ADMIN-VALID-001: Admin endpoints accept admin token', async () => {
-      if (!process.env.ADMIN_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAdminAuth();
+      await apiClient.withAdminAuthAsync();
 
       const response = await apiClient.makeRequest('GET', '/admin/registrations');
 
@@ -171,12 +156,8 @@ test.describe('Member Endpoint Authorization', () => {
 
     for (const endpoint of memberEndpoints.slice(0, 3)) {
       test(`AUTH-MEMBER-ADMIN-${endpoint.name.replace(/\s+/g, '-')}: ${endpoint.name} rejects admin token`, async () => {
-        if (!process.env.ADMIN_TOKEN) {
-          test.skip();
-          return;
-        }
-
-        apiClient.withAuth(process.env.ADMIN_TOKEN);
+        const adminToken = await apiClient.getQuickAuth().getAdminToken();
+        apiClient.withAuth(adminToken);
 
         const response = await apiClient.makeRequest(endpoint.method, endpoint.path);
 
@@ -189,12 +170,7 @@ test.describe('Member Endpoint Authorization', () => {
   test.describe('Valid Member Token', () => {
 
     test('AUTH-MEMBER-VALID-001: Member endpoints accept member token', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       const response = await apiClient.makeRequest('GET', '/account/security/pin/status');
 
@@ -228,12 +204,7 @@ test.describe('Cross-User Access Prevention', () => {
     // This test verifies that users can only access their own data
     // Member endpoints should be scoped to the authenticated user
 
-    if (!process.env.MEMBER_TOKEN) {
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(process.env.MEMBER_TOKEN);
+    await apiClient.withMemberAuthAsync();
 
     // User should only see their own status
     const response = await apiClient.getMembershipStatus();
@@ -243,12 +214,7 @@ test.describe('Cross-User Access Prevention', () => {
   });
 
   test('AUTH-CROSS-002: Admin operations require valid IDs', async () => {
-    if (!process.env.ADMIN_TOKEN) {
-      test.skip();
-      return;
-    }
-
-    apiClient.withAdminAuth();
+    await apiClient.withAdminAuthAsync();
 
     // Try to access non-existent user
     const response = await apiClient.makeRequest('POST', '/admin/users/nonexistent-user-id/disable');
@@ -261,10 +227,7 @@ test.describe('Cross-User Access Prevention', () => {
 test.describe('Token Handling Edge Cases', () => {
 
   test('AUTH-TOKEN-001: Token in wrong format (no Bearer prefix)', async () => {
-    if (!process.env.MEMBER_TOKEN) {
-      test.skip();
-      return;
-    }
+    await apiClient.withMemberAuthAsync();
 
     // Normally tokens are sent as "Bearer <token>"
     // Test sending without Bearer prefix
@@ -424,12 +387,7 @@ test.describe('Role-Based Access Control', () => {
 test.describe('Privilege Escalation Prevention', () => {
 
   test('AUTH-PRIV-001: Cannot escalate to admin via request manipulation', async () => {
-    if (!process.env.MEMBER_TOKEN) {
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(process.env.MEMBER_TOKEN);
+    await apiClient.withMemberAuthAsync();
 
     // Try to access admin endpoint with member token
     const response = await apiClient.makeRequest('POST', '/admin/registrations/test/approve');
@@ -438,12 +396,7 @@ test.describe('Privilege Escalation Prevention', () => {
   });
 
   test('AUTH-PRIV-002: Cannot add admin role via membership request', async () => {
-    if (!process.env.MEMBER_TOKEN) {
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(process.env.MEMBER_TOKEN);
+    await apiClient.withMemberAuthAsync();
 
     // Try to request membership with admin escalation payload
     const response = await apiClient.makeRequest('POST', '/account/membership/request', {

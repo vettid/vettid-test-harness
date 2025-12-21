@@ -18,12 +18,7 @@ test.describe('PIN Security System', () => {
   test.describe('Enable PIN', () => {
 
     test('PIN-001: Enable PIN with valid 4-digit PIN', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
       const response = await apiClient.enablePin('1234');
 
       if (response.status === 200 || response.status === 201) {
@@ -35,12 +30,7 @@ test.describe('PIN Security System', () => {
     });
 
     test('PIN-002: Enable PIN with valid 5-digit PIN', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       // First disable if enabled
       await apiClient.disablePin();
@@ -54,12 +44,7 @@ test.describe('PIN Security System', () => {
     });
 
     test('PIN-003: Enable PIN with valid 6-digit PIN', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       // First disable if enabled
       await apiClient.disablePin();
@@ -70,12 +55,7 @@ test.describe('PIN Security System', () => {
     });
 
     test('PIN-004: Reject PIN with less than 4 digits', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       // First disable if enabled
       await apiClient.disablePin();
@@ -87,12 +67,7 @@ test.describe('PIN Security System', () => {
     });
 
     test('PIN-005: Reject PIN with more than 6 digits', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       // First disable if enabled
       await apiClient.disablePin();
@@ -104,12 +79,7 @@ test.describe('PIN Security System', () => {
     });
 
     test('PIN-006: Reject PIN with non-numeric characters', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
       await apiClient.disablePin();
 
       const invalidPins = ['abcd', '12ab', '12.34', '1234!', ' 1234'];
@@ -121,12 +91,7 @@ test.describe('PIN Security System', () => {
     });
 
     test('PIN-007: Reject PIN with special characters', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
       await apiClient.disablePin();
 
       const response = await apiClient.enablePin('12#4');
@@ -135,12 +100,7 @@ test.describe('PIN Security System', () => {
     });
 
     test('PIN-008: Reject empty PIN', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
       await apiClient.disablePin();
 
       const response = await apiClient.enablePin('');
@@ -149,12 +109,7 @@ test.describe('PIN Security System', () => {
     });
 
     test('PIN-009: Reject PIN when already enabled', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       // Ensure PIN is disabled first
       await apiClient.disablePin();
@@ -182,12 +137,7 @@ test.describe('PIN Security System', () => {
     });
 
     test('PIN-011: PIN with leading zeros is valid', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
       await apiClient.disablePin();
 
       const response = await apiClient.enablePin('0000');
@@ -197,12 +147,7 @@ test.describe('PIN Security System', () => {
     });
 
     test('PIN-012: PIN with sequential numbers is allowed', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
       await apiClient.disablePin();
 
       // Sequential PINs like 1234 might be weak but should be allowed
@@ -212,12 +157,7 @@ test.describe('PIN Security System', () => {
     });
 
     test('PIN-013: PIN with repeated digits is allowed', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
       await apiClient.disablePin();
 
       const response = await apiClient.enablePin('1111');
@@ -229,12 +169,7 @@ test.describe('PIN Security System', () => {
   test.describe('Disable PIN', () => {
 
     test('PIN-014: Disable enabled PIN', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       // Enable PIN first
       const enableResponse = await apiClient.enablePin('1234');
@@ -251,12 +186,7 @@ test.describe('PIN Security System', () => {
     });
 
     test('PIN-015: Disable PIN when not enabled', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       // Ensure PIN is disabled
       await apiClient.disablePin();
@@ -283,12 +213,7 @@ test.describe('PIN Security System', () => {
   test.describe('Update PIN', () => {
 
     test('PIN-017: Update PIN with valid new PIN', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       // Enable PIN first
       await apiClient.disablePin();
@@ -301,12 +226,7 @@ test.describe('PIN Security System', () => {
     });
 
     test('PIN-018: Update PIN requires current PIN', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       // Enable PIN first
       await apiClient.disablePin();
@@ -322,12 +242,7 @@ test.describe('PIN Security System', () => {
     });
 
     test('PIN-019: Update PIN with wrong current PIN', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       // Enable PIN first
       await apiClient.disablePin();
@@ -341,12 +256,7 @@ test.describe('PIN Security System', () => {
     });
 
     test('PIN-020: Update PIN when not enabled', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       // Ensure PIN is disabled
       await apiClient.disablePin();
@@ -359,12 +269,7 @@ test.describe('PIN Security System', () => {
     });
 
     test('PIN-021: Update PIN validates new PIN format', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       // Enable PIN first
       await apiClient.disablePin();
@@ -388,12 +293,7 @@ test.describe('PIN Security System', () => {
   test.describe('Get PIN Status', () => {
 
     test('PIN-023: Get PIN status when enabled', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       // Enable PIN
       await apiClient.disablePin();
@@ -406,12 +306,7 @@ test.describe('PIN Security System', () => {
     });
 
     test('PIN-024: Get PIN status when disabled', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       // Disable PIN
       await apiClient.disablePin();
@@ -431,12 +326,7 @@ test.describe('PIN Security System', () => {
     });
 
     test('PIN-026: PIN status does not return PIN hash', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       const response = await apiClient.getPinStatus();
 
@@ -449,12 +339,7 @@ test.describe('PIN Security System', () => {
   test.describe('PIN Boundary Testing', () => {
 
     test('PIN-027: All valid PIN lengths (4-6 digits)', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       const validPins = ['1234', '12345', '123456'];
 
@@ -471,12 +356,7 @@ test.describe('PIN Security System', () => {
     });
 
     test('PIN-028: Invalid PIN lengths are rejected', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
       await apiClient.disablePin();
 
       const invalidPins = ['1', '12', '123', '1234567', '12345678'];
@@ -496,12 +376,7 @@ test.describe('PIN Security System', () => {
       // 1. PIN is not returned in any response
       // 2. Different PINs produce different results
 
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       // Enable a PIN
       await apiClient.disablePin();
@@ -515,12 +390,7 @@ test.describe('PIN Security System', () => {
     });
 
     test('PIN-030: Timing attack resistance on PIN update', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       // Enable PIN
       await apiClient.disablePin();
@@ -563,12 +433,7 @@ test.describe('PIN Security System', () => {
       // This test assumes audit logging is implemented
       // We verify by checking the response includes relevant timestamps
 
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
       await apiClient.disablePin();
 
       const response = await apiClient.enablePin('1234');
@@ -587,12 +452,8 @@ test.describe('PIN Security System', () => {
 test.describe('PIN with Member Authorization', () => {
 
   test('PIN-032: Admin token cannot access member PIN endpoints', async () => {
-    if (!process.env.ADMIN_TOKEN) {
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(process.env.ADMIN_TOKEN);
+    const adminToken = await apiClient.getQuickAuth().getAdminToken();
+    apiClient.withAuth(adminToken);
 
     // Admin should not be able to access member endpoints
     const statusResponse = await apiClient.getPinStatus();

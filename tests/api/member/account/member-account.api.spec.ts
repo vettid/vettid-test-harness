@@ -25,12 +25,7 @@ test.describe('Get Membership Status', () => {
     });
 
     test('MEMBER-STATUS-002: Accepts member token', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       const response = await apiClient.makeRequest('GET', '/account/membership/status');
 
@@ -50,12 +45,7 @@ test.describe('Get Membership Status', () => {
   test.describe('Response Format', () => {
 
     test('MEMBER-STATUS-004: Returns membership status object', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       const response = await apiClient.makeRequest('GET', '/account/membership/status');
 
@@ -65,12 +55,7 @@ test.describe('Get Membership Status', () => {
     });
 
     test('MEMBER-STATUS-005: Status is valid enum', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       const response = await apiClient.makeRequest('GET', '/account/membership/status');
 
@@ -94,12 +79,7 @@ test.describe('Request Membership', () => {
     });
 
     test('MEMBER-REQUEST-002: Accepts member token', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       const response = await apiClient.makeRequest('POST', '/account/membership/request');
 
@@ -151,12 +131,7 @@ test.describe('Get PIN Status', () => {
     });
 
     test('PIN-STATUS-002: Accepts member token', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       const response = await apiClient.makeRequest('GET', '/account/security/pin/status');
 
@@ -167,12 +142,7 @@ test.describe('Get PIN Status', () => {
   test.describe('Response Format', () => {
 
     test('PIN-STATUS-003: Returns PIN enabled status', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       const response = await apiClient.makeRequest('GET', '/account/security/pin/status');
 
@@ -199,12 +169,7 @@ test.describe('Enable PIN', () => {
     });
 
     test('PIN-ENABLE-002: Accepts member token', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       const response = await apiClient.makeRequest('POST', '/account/security/pin/enable', {
         pin: '123456'
@@ -218,12 +183,7 @@ test.describe('Enable PIN', () => {
   test.describe('Validation', () => {
 
     test('PIN-ENABLE-003: Rejects empty PIN', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       const response = await apiClient.makeRequest('POST', '/account/security/pin/enable', {
         pin: ''
@@ -233,12 +193,7 @@ test.describe('Enable PIN', () => {
     });
 
     test('PIN-ENABLE-004: Rejects PIN too short', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       const response = await apiClient.makeRequest('POST', '/account/security/pin/enable', {
         pin: '12'
@@ -248,12 +203,7 @@ test.describe('Enable PIN', () => {
     });
 
     test('PIN-ENABLE-005: Rejects PIN too long', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       const response = await apiClient.makeRequest('POST', '/account/security/pin/enable', {
         pin: '12345678901234567890'
@@ -263,12 +213,7 @@ test.describe('Enable PIN', () => {
     });
 
     test('PIN-ENABLE-006: Rejects non-numeric PIN', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       const response = await apiClient.makeRequest('POST', '/account/security/pin/enable', {
         pin: 'abcdef'
@@ -278,12 +223,7 @@ test.describe('Enable PIN', () => {
     });
 
     test('PIN-ENABLE-007: Rejects sequential PIN (123456)', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       const response = await apiClient.makeRequest('POST', '/account/security/pin/enable', {
         pin: '123456'
@@ -294,12 +234,7 @@ test.describe('Enable PIN', () => {
     });
 
     test('PIN-ENABLE-008: Rejects repeated digits (111111)', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       const response = await apiClient.makeRequest('POST', '/account/security/pin/enable', {
         pin: '111111'
@@ -339,12 +274,7 @@ test.describe('Disable PIN', () => {
     });
 
     test('PIN-DISABLE-002: Accepts member token', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       const response = await apiClient.makeRequest('POST', '/account/security/pin/disable');
 
@@ -384,12 +314,7 @@ test.describe('Update PIN', () => {
     });
 
     test('PIN-UPDATE-002: Accepts member token', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       const response = await apiClient.updatePin('654321', '123456');
 
@@ -480,12 +405,7 @@ test.describe('Cancel Account', () => {
 test.describe('Account Performance', () => {
 
   test('ACCOUNT-PERF-001: Membership status under 1 second', async () => {
-    if (!process.env.MEMBER_TOKEN) {
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(process.env.MEMBER_TOKEN);
+    await apiClient.withMemberAuthAsync();
     apiClient.startTimer();
 
     const response = await apiClient.makeRequest('GET', '/account/membership/status');
@@ -496,12 +416,7 @@ test.describe('Account Performance', () => {
   });
 
   test('ACCOUNT-PERF-002: PIN status under 500ms', async () => {
-    if (!process.env.MEMBER_TOKEN) {
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(process.env.MEMBER_TOKEN);
+    await apiClient.withMemberAuthAsync();
     apiClient.startTimer();
 
     const response = await apiClient.makeRequest('GET', '/account/security/pin/status');
@@ -515,12 +430,7 @@ test.describe('Account Performance', () => {
 test.describe('Account Security', () => {
 
   test('ACCOUNT-SEC-001: No PIN value in status response', async () => {
-    if (!process.env.MEMBER_TOKEN) {
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(process.env.MEMBER_TOKEN);
+    await apiClient.withMemberAuthAsync();
 
     const response = await apiClient.makeRequest('GET', '/account/security/pin/status');
 
@@ -532,12 +442,7 @@ test.describe('Account Security', () => {
   });
 
   test('ACCOUNT-SEC-002: Rate limiting on PIN operations', async () => {
-    if (!process.env.MEMBER_TOKEN) {
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(process.env.MEMBER_TOKEN);
+    await apiClient.withMemberAuthAsync();
 
     // Make multiple rapid requests
     const requests = [];

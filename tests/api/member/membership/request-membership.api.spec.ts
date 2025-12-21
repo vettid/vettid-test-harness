@@ -26,12 +26,8 @@ test.describe('Request Membership', () => {
     });
 
     test('MEMREQ-002: Rejects admin token (member only)', async () => {
-      if (!process.env.ADMIN_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.ADMIN_TOKEN);
+      const adminToken = await apiClient.getQuickAuth().getAdminToken();
+      apiClient.withAuth(adminToken);
 
       const response = await apiClient.requestMembership();
 
@@ -40,12 +36,7 @@ test.describe('Request Membership', () => {
     });
 
     test('MEMREQ-003: Accepts member token', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       const response = await apiClient.requestMembership();
 
@@ -66,12 +57,7 @@ test.describe('Request Membership', () => {
   test.describe('Terms Acceptance', () => {
 
     test('MEMREQ-005: Requires terms_version_id', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       // Request without terms_version_id
       const response = await apiClient.makeRequest('POST', '/account/membership/request', {});
@@ -81,12 +67,7 @@ test.describe('Request Membership', () => {
     });
 
     test('MEMREQ-006: Rejects invalid terms_version_id', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       const response = await apiClient.makeRequest('POST', '/account/membership/request', {
         terms_version_id: 'nonexistent-version-12345'
@@ -224,12 +205,7 @@ test.describe('Get Membership Status', () => {
     });
 
     test('MEMSTATUS-002: Accepts member token', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       const response = await apiClient.getMembershipStatus();
 
@@ -240,12 +216,7 @@ test.describe('Get Membership Status', () => {
   test.describe('Response Format', () => {
 
     test('MEMSTATUS-003: Returns membership_status field', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       const response = await apiClient.getMembershipStatus();
 
@@ -254,12 +225,7 @@ test.describe('Get Membership Status', () => {
     });
 
     test('MEMSTATUS-004: Status is valid enum value', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       const response = await apiClient.getMembershipStatus();
 
@@ -269,12 +235,7 @@ test.describe('Get Membership Status', () => {
     });
 
     test('MEMSTATUS-005: Returns terms_version_id if requested', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       const response = await apiClient.getMembershipStatus();
 
@@ -285,12 +246,7 @@ test.describe('Get Membership Status', () => {
     });
 
     test('MEMSTATUS-006: Returns timestamps for requested memberships', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       const response = await apiClient.getMembershipStatus();
 
@@ -373,12 +329,7 @@ test.describe('Get Membership Terms', () => {
     });
 
     test('MEMTERMS-002: Accepts member token', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       const response = await apiClient.getMembershipTerms();
 
@@ -389,12 +340,7 @@ test.describe('Get Membership Terms', () => {
   test.describe('Response Format', () => {
 
     test('MEMTERMS-003: Returns current terms', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       const response = await apiClient.getMembershipTerms();
 
@@ -406,12 +352,7 @@ test.describe('Get Membership Terms', () => {
     });
 
     test('MEMTERMS-004: Returns PDF URL', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       const response = await apiClient.getMembershipTerms();
 
@@ -426,12 +367,7 @@ test.describe('Get Membership Terms', () => {
     });
 
     test('MEMTERMS-005: Returns is_current flag', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       const response = await apiClient.getMembershipTerms();
 
@@ -443,12 +379,7 @@ test.describe('Get Membership Terms', () => {
     });
 
     test('MEMTERMS-006: Handles no terms defined', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       const response = await apiClient.getMembershipTerms();
 
@@ -464,12 +395,7 @@ test.describe('Get Membership Terms', () => {
   test.describe('Terms Content', () => {
 
     test('MEMTERMS-007: Terms text is not empty', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       const response = await apiClient.getMembershipTerms();
 
@@ -482,12 +408,7 @@ test.describe('Get Membership Terms', () => {
     });
 
     test('MEMTERMS-008: Version ID is valid format', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       const response = await apiClient.getMembershipTerms();
 

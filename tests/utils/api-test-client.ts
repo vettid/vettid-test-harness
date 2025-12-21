@@ -1,5 +1,6 @@
 import { APIRequestContext, expect } from '@playwright/test';
 import { APIHelpers } from './api-helpers';
+import { QuickAuth } from './quick-auth';
 
 /**
  * Enhanced API client for testing
@@ -8,9 +9,11 @@ import { APIHelpers } from './api-helpers';
 export class APITestClient extends APIHelpers {
   private currentToken?: string;
   private startTime?: number;
+  private quickAuth: QuickAuth;
 
   constructor(request: APIRequestContext) {
     super(request);
+    this.quickAuth = new QuickAuth(request);
   }
 
   /**
@@ -34,15 +37,69 @@ export class APITestClient extends APIHelpers {
   }
 
   /**
-   * Make authenticated request with admin token
+   * Make authenticated request with admin token (async version)
+   * Uses QuickAuth to get token from Cognito
+   */
+  async withAdminAuthAsync(): Promise<this> {
+    const adminToken = await this.quickAuth.getAdminToken();
+    return this.withAuth(adminToken);
+  }
+
+  /**
+   * Make authenticated request with member token (async version)
+   * Uses QuickAuth to get token via password auth or magic link
+   */
+  async withMemberAuthAsync(email?: string): Promise<this> {
+    const memberToken = await this.quickAuth.getMemberToken(email);
+    return this.withAuth(memberToken);
+  }
+
+  /**
+   * Make authenticated request with admin token (sync - legacy)
    * Returns this for chaining
+   * @deprecated Use withAdminAuthAsync() instead for dynamic token retrieval
    */
   withAdminAuth(): this {
     const adminToken = process.env.ADMIN_TOKEN;
     if (!adminToken) {
-      throw new Error('ADMIN_TOKEN environment variable required');
+      throw new Error('ADMIN_TOKEN environment variable required - use withAdminAuthAsync() for dynamic token');
     }
     return this.withAuth(adminToken);
+  }
+
+  /**
+   * Get QuickAuth instance for direct access to auth helpers
+   */
+  getQuickAuth(): QuickAuth {
+    return this.quickAuth;
+  }
+
+  /**
+   * Approve a registration by ID (convenience method with auto-auth)
+   */
+  async approveRegistrationWithAuth(registrationId: string): Promise<{ status: number; body: any }> {
+    await this.withAdminAuthAsync();
+    return this.approveRegistration(registrationId);
+  }
+
+  /**
+   * Create an approved user end-to-end (register + approve)
+   */
+  async createApprovedUser(options?: {
+    email?: string;
+    firstName?: string;
+    lastName?: string;
+    inviteCode?: string;
+  }): Promise<{
+    email: string;
+    registrationId: string;
+    userId: string;
+  }> {
+    return this.quickAuth.createApprovedUser({
+      email: options?.email,
+      firstName: options?.firstName,
+      lastName: options?.lastName,
+    });
   }
 
   /**

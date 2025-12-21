@@ -9,7 +9,7 @@ export class APIHelpers {
   private authToken?: string;
 
   constructor(protected request: APIRequestContext) {
-    this.baseURL = process.env.API_URL || 'https://cgccjd4djg.execute-api.us-east-1.amazonaws.com';
+    this.baseURL = process.env.API_URL || 'https://tiqpij5mue.execute-api.us-east-1.amazonaws.com';
   }
 
   /**

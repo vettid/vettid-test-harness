@@ -198,12 +198,7 @@ test.describe('XSS Prevention - Registration Endpoint', () => {
 test.describe('XSS Prevention - Admin Endpoints', () => {
 
   test('XSS-ADMIN-001: XSS in invite code creation is handled', async () => {
-    if (!process.env.ADMIN_TOKEN) {
-      test.skip();
-      return;
-    }
-
-    apiClient.withAdminAuth();
+    await apiClient.withAdminAuthAsync();
 
     const response = await apiClient.createInviteWithOptions({
       code: "<script>alert('xss')</script>"
@@ -218,12 +213,7 @@ test.describe('XSS Prevention - Admin Endpoints', () => {
   });
 
   test('XSS-ADMIN-002: XSS in admin user creation is handled', async () => {
-    if (!process.env.ADMIN_TOKEN) {
-      test.skip();
-      return;
-    }
-
-    apiClient.withAdminAuth();
+    await apiClient.withAdminAuthAsync();
 
     const response = await apiClient.makeRequest('POST', '/admin/admins', {
       first_name: "<script>alert('xss')</script>",
@@ -235,12 +225,7 @@ test.describe('XSS Prevention - Admin Endpoints', () => {
   });
 
   test('XSS-ADMIN-003: XSS in membership terms is handled', async () => {
-    if (!process.env.ADMIN_TOKEN) {
-      test.skip();
-      return;
-    }
-
-    apiClient.withAdminAuth();
+    await apiClient.withAdminAuthAsync();
 
     const xssTerms = `
       <h1>Terms</h1>
@@ -263,12 +248,7 @@ test.describe('XSS Prevention - Admin Endpoints', () => {
 test.describe('XSS Prevention - Member Endpoints', () => {
 
   test('XSS-MEMBER-001: XSS in PIN is rejected', async () => {
-    if (!process.env.MEMBER_TOKEN) {
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(process.env.MEMBER_TOKEN);
+    await apiClient.withMemberAuthAsync();
     await apiClient.disablePin();
 
     const response = await apiClient.enablePin("<script>alert(1)</script>");
@@ -312,11 +292,6 @@ test.describe('XSS Prevention - Stored XSS', () => {
   test('XSS-STORED-001: Verify stored data does not contain active XSS', async () => {
     // This test registers a user with XSS payload, then retrieves to verify sanitization
 
-    if (!process.env.ADMIN_TOKEN) {
-      test.skip();
-      return;
-    }
-
     const xssName = "<script>alert('stored-xss')</script>";
     const user = testDataGenerator.generateUser({
       first_name: xssName
@@ -331,7 +306,7 @@ test.describe('XSS Prevention - Stored XSS', () => {
     }
 
     // Now fetch as admin and verify stored data is safe
-    apiClient.withAdminAuth();
+    await apiClient.withAdminAuthAsync();
 
     const listResponse = await apiClient.listRegistrations();
 

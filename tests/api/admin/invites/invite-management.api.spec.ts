@@ -27,12 +27,7 @@ test.describe('Create Invite', () => {
     });
 
     test('INVITE-CREATE-002: Accepts admin token', async () => {
-      if (!process.env.ADMIN_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAdminAuth();
+      await apiClient.withAdminAuthAsync();
 
       const response = await apiClient.createInviteWithOptions({
         max_uses: 1
@@ -57,12 +52,7 @@ test.describe('Create Invite', () => {
   test.describe('Validation', () => {
 
     test('INVITE-CREATE-004: Creates invite with default options', async () => {
-      if (!process.env.ADMIN_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAdminAuth();
+      await apiClient.withAdminAuthAsync();
 
       const response = await apiClient.createInviteWithOptions({});
 
@@ -73,12 +63,7 @@ test.describe('Create Invite', () => {
     });
 
     test('INVITE-CREATE-005: Creates invite with max_uses', async () => {
-      if (!process.env.ADMIN_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAdminAuth();
+      await apiClient.withAdminAuthAsync();
 
       const response = await apiClient.createInviteWithOptions({
         max_uses: 5
@@ -90,12 +75,7 @@ test.describe('Create Invite', () => {
     });
 
     test('INVITE-CREATE-006: Creates invite with expiration date', async () => {
-      if (!process.env.ADMIN_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAdminAuth();
+      await apiClient.withAdminAuthAsync();
 
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + 30);
@@ -111,12 +91,7 @@ test.describe('Create Invite', () => {
     });
 
     test('INVITE-CREATE-007: Rejects negative max_uses', async () => {
-      if (!process.env.ADMIN_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAdminAuth();
+      await apiClient.withAdminAuthAsync();
 
       const response = await apiClient.createInviteWithOptions({
         max_uses: -1
@@ -127,12 +102,7 @@ test.describe('Create Invite', () => {
     });
 
     test('INVITE-CREATE-008: Rejects past expiration date', async () => {
-      if (!process.env.ADMIN_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAdminAuth();
+      await apiClient.withAdminAuthAsync();
 
       const pastDate = new Date('2020-01-01').toISOString();
 
@@ -145,12 +115,7 @@ test.describe('Create Invite', () => {
     });
 
     test('INVITE-CREATE-009: Handles zero max_uses', async () => {
-      if (!process.env.ADMIN_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAdminAuth();
+      await apiClient.withAdminAuthAsync();
 
       const response = await apiClient.createInviteWithOptions({
         max_uses: 0
@@ -164,12 +129,7 @@ test.describe('Create Invite', () => {
   test.describe('Auto-Approve Feature', () => {
 
     test('INVITE-CREATE-010: Creates invite with auto_approve=true', async () => {
-      if (!process.env.ADMIN_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAdminAuth();
+      await apiClient.withAdminAuthAsync();
 
       const response = await apiClient.createInviteWithOptions({
         auto_approve: true,
@@ -182,12 +142,7 @@ test.describe('Create Invite', () => {
     });
 
     test('INVITE-CREATE-011: Creates invite with auto_approve=false', async () => {
-      if (!process.env.ADMIN_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAdminAuth();
+      await apiClient.withAdminAuthAsync();
 
       const response = await apiClient.createInviteWithOptions({
         auto_approve: false,
@@ -214,12 +169,7 @@ test.describe('List Invites', () => {
     });
 
     test('INVITE-LIST-002: Accepts admin token', async () => {
-      if (!process.env.ADMIN_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAdminAuth();
+      await apiClient.withAdminAuthAsync();
 
       const response = await apiClient.makeRequest('GET', '/admin/invites');
 
@@ -230,12 +180,7 @@ test.describe('List Invites', () => {
   test.describe('Response Format', () => {
 
     test('INVITE-LIST-003: Returns array of invites', async () => {
-      if (!process.env.ADMIN_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAdminAuth();
+      await apiClient.withAdminAuthAsync();
 
       const response = await apiClient.makeRequest('GET', '/admin/invites');
 
@@ -246,12 +191,7 @@ test.describe('List Invites', () => {
     });
 
     test('INVITE-LIST-004: Each invite has required fields', async () => {
-      if (!process.env.ADMIN_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAdminAuth();
+      await apiClient.withAdminAuthAsync();
 
       const response = await apiClient.makeRequest('GET', '/admin/invites');
 
@@ -268,12 +208,7 @@ test.describe('List Invites', () => {
   test.describe('Filtering', () => {
 
     test('INVITE-LIST-005: Filter by status=active', async () => {
-      if (!process.env.ADMIN_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAdminAuth();
+      await apiClient.withAdminAuthAsync();
 
       const response = await apiClient.makeRequest('GET', '/admin/invites?status=active');
 
@@ -281,12 +216,7 @@ test.describe('List Invites', () => {
     });
 
     test('INVITE-LIST-006: Filter by status=expired', async () => {
-      if (!process.env.ADMIN_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAdminAuth();
+      await apiClient.withAdminAuthAsync();
 
       const response = await apiClient.makeRequest('GET', '/admin/invites?status=expired');
 
@@ -308,12 +238,7 @@ test.describe('Expire Invite', () => {
     });
 
     test('INVITE-EXPIRE-002: Accepts admin token', async () => {
-      if (!process.env.ADMIN_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAdminAuth();
+      await apiClient.withAdminAuthAsync();
 
       const response = await apiClient.expireInvite('NONEXISTENT-CODE');
 
@@ -325,12 +250,7 @@ test.describe('Expire Invite', () => {
   test.describe('Validation', () => {
 
     test('INVITE-EXPIRE-003: Rejects non-existent invite code', async () => {
-      if (!process.env.ADMIN_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAdminAuth();
+      await apiClient.withAdminAuthAsync();
 
       const response = await apiClient.expireInvite('NONEXISTENT-INVITE-CODE-12345');
 
@@ -338,12 +258,7 @@ test.describe('Expire Invite', () => {
     });
 
     test('INVITE-EXPIRE-004: Handles empty code', async () => {
-      if (!process.env.ADMIN_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAdminAuth();
+      await apiClient.withAdminAuthAsync();
 
       const response = await apiClient.makeRequest('POST', '/admin/invites//expire');
 
@@ -351,12 +266,7 @@ test.describe('Expire Invite', () => {
     });
 
     test('INVITE-EXPIRE-005: Handles special characters in code', async () => {
-      if (!process.env.ADMIN_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAdminAuth();
+      await apiClient.withAdminAuthAsync();
 
       const response = await apiClient.expireInvite('<script>alert(1)</script>');
 
@@ -379,12 +289,7 @@ test.describe('Delete Invite', () => {
     });
 
     test('INVITE-DELETE-002: Accepts admin token', async () => {
-      if (!process.env.ADMIN_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAdminAuth();
+      await apiClient.withAdminAuthAsync();
 
       const response = await apiClient.deleteInvite('NONEXISTENT-CODE');
 
@@ -396,12 +301,7 @@ test.describe('Delete Invite', () => {
   test.describe('Validation', () => {
 
     test('INVITE-DELETE-003: Rejects non-existent invite code', async () => {
-      if (!process.env.ADMIN_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAdminAuth();
+      await apiClient.withAdminAuthAsync();
 
       const response = await apiClient.deleteInvite('NONEXISTENT-INVITE-CODE-12345');
 
@@ -428,12 +328,7 @@ test.describe('Delete Invite', () => {
 test.describe('Invite Code Format', () => {
 
   test('INVITE-FORMAT-001: Code follows VET-XXXXXXXX pattern', async () => {
-    if (!process.env.ADMIN_TOKEN) {
-      test.skip();
-      return;
-    }
-
-    apiClient.withAdminAuth();
+    await apiClient.withAdminAuthAsync();
 
     const response = await apiClient.createInviteWithOptions({ max_uses: 1 });
 
@@ -443,12 +338,7 @@ test.describe('Invite Code Format', () => {
   });
 
   test('INVITE-FORMAT-002: Code is unique', async () => {
-    if (!process.env.ADMIN_TOKEN) {
-      test.skip();
-      return;
-    }
-
-    apiClient.withAdminAuth();
+    await apiClient.withAdminAuthAsync();
 
     // Create two invites and verify codes are different
     const response1 = await apiClient.createInviteWithOptions({ max_uses: 1 });
@@ -463,12 +353,7 @@ test.describe('Invite Code Format', () => {
 test.describe('Invite Performance', () => {
 
   test('INVITE-PERF-001: Create invite response time under 2 seconds', async () => {
-    if (!process.env.ADMIN_TOKEN) {
-      test.skip();
-      return;
-    }
-
-    apiClient.withAdminAuth();
+    await apiClient.withAdminAuthAsync();
     apiClient.startTimer();
 
     const response = await apiClient.createInviteWithOptions({ max_uses: 1 });
@@ -479,12 +364,7 @@ test.describe('Invite Performance', () => {
   });
 
   test('INVITE-PERF-002: List invites response time under 2 seconds', async () => {
-    if (!process.env.ADMIN_TOKEN) {
-      test.skip();
-      return;
-    }
-
-    apiClient.withAdminAuth();
+    await apiClient.withAdminAuthAsync();
     apiClient.startTimer();
 
     const response = await apiClient.makeRequest('GET', '/admin/invites');

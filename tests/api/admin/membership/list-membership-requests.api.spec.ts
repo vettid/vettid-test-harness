@@ -26,12 +26,7 @@ test.describe('List Membership Requests', () => {
     });
 
     test('MEMBERSHIP-LIST-002: Rejects member token (admin only)', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       const response = await apiClient.listMembershipRequests();
 
@@ -40,12 +35,7 @@ test.describe('List Membership Requests', () => {
     });
 
     test('MEMBERSHIP-LIST-003: Accepts admin token', async () => {
-      if (!process.env.ADMIN_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAdminAuth();
+      await apiClient.withAdminAuthAsync();
 
       const response = await apiClient.listMembershipRequests();
 
@@ -73,12 +63,7 @@ test.describe('List Membership Requests', () => {
   test.describe('Response Format', () => {
 
     test('MEMBERSHIP-LIST-006: Returns array of requests', async () => {
-      if (!process.env.ADMIN_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAdminAuth();
+      await apiClient.withAdminAuthAsync();
 
       const response = await apiClient.listMembershipRequests();
 
@@ -89,12 +74,7 @@ test.describe('List Membership Requests', () => {
     });
 
     test('MEMBERSHIP-LIST-007: Each request has required fields', async () => {
-      if (!process.env.ADMIN_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAdminAuth();
+      await apiClient.withAdminAuthAsync();
 
       const response = await apiClient.listMembershipRequests();
 
@@ -114,12 +94,7 @@ test.describe('List Membership Requests', () => {
     });
 
     test('MEMBERSHIP-LIST-008: Membership status is valid enum', async () => {
-      if (!process.env.ADMIN_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAdminAuth();
+      await apiClient.withAdminAuthAsync();
 
       const response = await apiClient.listMembershipRequests();
 
@@ -139,12 +114,7 @@ test.describe('List Membership Requests', () => {
   test.describe('Filtering', () => {
 
     test('MEMBERSHIP-LIST-009: Filter by status=pending', async () => {
-      if (!process.env.ADMIN_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAdminAuth();
+      await apiClient.withAdminAuthAsync();
 
       const response = await apiClient.makeRequest('GET', '/admin/memberships?status=pending');
 
@@ -158,12 +128,7 @@ test.describe('List Membership Requests', () => {
     });
 
     test('MEMBERSHIP-LIST-010: Filter by status=approved', async () => {
-      if (!process.env.ADMIN_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAdminAuth();
+      await apiClient.withAdminAuthAsync();
 
       const response = await apiClient.makeRequest('GET', '/admin/memberships?status=approved');
 
@@ -177,12 +142,7 @@ test.describe('List Membership Requests', () => {
     });
 
     test('MEMBERSHIP-LIST-011: Filter by status=denied', async () => {
-      if (!process.env.ADMIN_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAdminAuth();
+      await apiClient.withAdminAuthAsync();
 
       const response = await apiClient.makeRequest('GET', '/admin/memberships?status=denied');
 
@@ -196,12 +156,7 @@ test.describe('List Membership Requests', () => {
     });
 
     test('MEMBERSHIP-LIST-012: Invalid status filter is handled', async () => {
-      if (!process.env.ADMIN_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAdminAuth();
+      await apiClient.withAdminAuthAsync();
 
       const response = await apiClient.makeRequest('GET', '/admin/membership-requests?membership_status=invalid');
 
@@ -219,12 +174,7 @@ test.describe('List Membership Requests', () => {
   test.describe('Pagination', () => {
 
     test('MEMBERSHIP-LIST-013: Supports limit parameter', async () => {
-      if (!process.env.ADMIN_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAdminAuth();
+      await apiClient.withAdminAuthAsync();
 
       const response = await apiClient.makeRequest('GET', '/admin/membership-requests?limit=5');
 
@@ -241,12 +191,7 @@ test.describe('List Membership Requests', () => {
     });
 
     test('MEMBERSHIP-LIST-014: Supports offset pagination', async () => {
-      if (!process.env.ADMIN_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAdminAuth();
+      await apiClient.withAdminAuthAsync();
 
       // Get first page
       const firstPage = await apiClient.makeRequest('GET', '/admin/membership-requests?limit=2&offset=0');
@@ -270,12 +215,7 @@ test.describe('List Membership Requests', () => {
     });
 
     test('MEMBERSHIP-LIST-015: Invalid limit is handled', async () => {
-      if (!process.env.ADMIN_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAdminAuth();
+      await apiClient.withAdminAuthAsync();
 
       const response = await apiClient.makeRequest('GET', '/admin/memberships?limit=-1');
 
@@ -284,12 +224,7 @@ test.describe('List Membership Requests', () => {
     });
 
     test('MEMBERSHIP-LIST-016: Very large limit is capped', async () => {
-      if (!process.env.ADMIN_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAdminAuth();
+      await apiClient.withAdminAuthAsync();
 
       const response = await apiClient.makeRequest('GET', '/admin/memberships?limit=10000');
 
@@ -301,12 +236,7 @@ test.describe('List Membership Requests', () => {
   test.describe('Performance', () => {
 
     test('MEMBERSHIP-LIST-017: Response time under 2 seconds', async () => {
-      if (!process.env.ADMIN_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAdminAuth();
+      await apiClient.withAdminAuthAsync();
       apiClient.startTimer();
 
       const response = await apiClient.listMembershipRequests();
@@ -331,12 +261,7 @@ test.describe('Approve Membership', () => {
     });
 
     test('MEMBERSHIP-APPROVE-002: Rejects member token', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       const response = await apiClient.approveMembership('test-id');
 
@@ -344,12 +269,7 @@ test.describe('Approve Membership', () => {
     });
 
     test('MEMBERSHIP-APPROVE-003: Accepts admin token', async () => {
-      if (!process.env.ADMIN_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAdminAuth();
+      await apiClient.withAdminAuthAsync();
 
       // Use a non-existent ID to test auth passes
       const response = await apiClient.approveMembership('nonexistent-id');
@@ -363,12 +283,7 @@ test.describe('Approve Membership', () => {
   test.describe('Validation', () => {
 
     test('MEMBERSHIP-APPROVE-004: Rejects non-existent request', async () => {
-      if (!process.env.ADMIN_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAdminAuth();
+      await apiClient.withAdminAuthAsync();
 
       const response = await apiClient.approveMembership('nonexistent-request-id-12345');
 
@@ -391,12 +306,7 @@ test.describe('Approve Membership', () => {
     });
 
     test('MEMBERSHIP-APPROVE-006: Handles empty ID parameter', async () => {
-      if (!process.env.ADMIN_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAdminAuth();
+      await apiClient.withAdminAuthAsync();
 
       const response = await apiClient.makeRequest('POST', '/admin/memberships//approve');
 
@@ -405,12 +315,7 @@ test.describe('Approve Membership', () => {
     });
 
     test('MEMBERSHIP-APPROVE-007: Handles special characters in ID', async () => {
-      if (!process.env.ADMIN_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAdminAuth();
+      await apiClient.withAdminAuthAsync();
 
       const response = await apiClient.approveMembership('<script>alert(1)</script>');
 
@@ -470,12 +375,7 @@ test.describe('Deny Membership', () => {
     });
 
     test('MEMBERSHIP-DENY-002: Rejects member token', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       const response = await apiClient.denyMembership('test-id');
 
@@ -483,12 +383,7 @@ test.describe('Deny Membership', () => {
     });
 
     test('MEMBERSHIP-DENY-003: Accepts admin token', async () => {
-      if (!process.env.ADMIN_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAdminAuth();
+      await apiClient.withAdminAuthAsync();
 
       const response = await apiClient.denyMembership('nonexistent-id');
 
@@ -500,12 +395,7 @@ test.describe('Deny Membership', () => {
   test.describe('Validation', () => {
 
     test('MEMBERSHIP-DENY-004: Rejects non-existent request', async () => {
-      if (!process.env.ADMIN_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAdminAuth();
+      await apiClient.withAdminAuthAsync();
 
       const response = await apiClient.denyMembership('nonexistent-request-id-12345');
 

@@ -1,5 +1,20 @@
 import { APIRequestContext } from '@playwright/test';
 import { APIHelpers } from './api-helpers';
+import { EmailRetriever } from './email-retriever';
+import {
+  CognitoIdentityProviderClient,
+  InitiateAuthCommand,
+  AdminInitiateAuthCommand,
+  AuthFlowType,
+  RespondToAuthChallengeCommand,
+  ChallengeNameType,
+} from '@aws-sdk/client-cognito-identity-provider';
+import { DynamoDBClient, ScanCommand } from '@aws-sdk/client-dynamodb';
+import { unmarshall } from '@aws-sdk/util-dynamodb';
+
+// Static cache shared across all QuickAuth instances
+// This prevents race conditions when parallel tests authenticate
+const globalTokenCache = new Map<string, { token: string; expiresAt: number }>();
 
 /**
  * Quick authentication helper for 24-hour sprint
@@ -7,31 +22,78 @@ import { APIHelpers } from './api-helpers';
  */
 export class QuickAuth {
   private apiHelpers: APIHelpers;
-  private adminToken?: string;
-  private tokenCache = new Map<string, { token: string; expiresAt: number }>();
+  private cognitoClient: CognitoIdentityProviderClient;
+  private ddbClient: DynamoDBClient;
 
   constructor(request: APIRequestContext) {
     this.apiHelpers = new APIHelpers(request);
+    this.cognitoClient = new CognitoIdentityProviderClient({
+      region: process.env.AWS_REGION || 'us-east-1',
+    });
+    this.ddbClient = new DynamoDBClient({
+      region: process.env.AWS_REGION || 'us-east-1',
+    });
   }
 
   /**
    * Get admin token from environment or Cognito
-   * Caches for reuse across tests
+   * Caches for reuse across tests (tokens expire after ~1 hour)
    */
   async getAdminToken(): Promise<string> {
-    // Check environment variable first
+    // Check environment variable first (pre-generated token)
     if (process.env.ADMIN_TOKEN) {
       return process.env.ADMIN_TOKEN;
     }
 
-    // Check cache
-    if (this.adminToken) {
-      return this.adminToken;
+    // Check global cache - tokens are valid for ~1 hour, we'll refresh at 55 minutes
+    const cached = globalTokenCache.get('admin');
+    if (cached && cached.expiresAt > Date.now()) {
+      return cached.token;
     }
 
-    // TODO: Implement Cognito OAuth flow for admin token
-    // For now, require it in environment
-    throw new Error('ADMIN_TOKEN environment variable required for sprint tests');
+    // Get credentials from environment
+    const userPoolId = process.env.ADMIN_USER_POOL_ID;
+    const clientId = process.env.ADMIN_CLIENT_ID;
+    const username = process.env.ADMIN_EMAIL;
+    const password = process.env.ADMIN_PASSWORD;
+
+    if (!userPoolId || !clientId || !username || !password) {
+      throw new Error(
+        'Admin credentials not configured. Required env vars: ' +
+        'ADMIN_USER_POOL_ID, ADMIN_CLIENT_ID, ADMIN_EMAIL, ADMIN_PASSWORD'
+      );
+    }
+
+    // Use AdminInitiateAuth (requires IAM credentials) for server-side authentication
+    // This works without client secret since we're using SRP or ADMIN_NO_SRP_AUTH
+    try {
+      const command = new AdminInitiateAuthCommand({
+        UserPoolId: userPoolId,
+        ClientId: clientId,
+        AuthFlow: AuthFlowType.ADMIN_USER_PASSWORD_AUTH,
+        AuthParameters: {
+          USERNAME: username,
+          PASSWORD: password,
+        },
+      });
+
+      const response = await this.cognitoClient.send(command);
+
+      if (!response.AuthenticationResult?.AccessToken) {
+        throw new Error('No access token in Cognito response');
+      }
+
+      // Cache the token in global cache (expires in 1 hour, refresh at 55 minutes)
+      const token = response.AuthenticationResult.AccessToken;
+      globalTokenCache.set('admin', {
+        token,
+        expiresAt: Date.now() + 55 * 60 * 1000,
+      });
+
+      return token;
+    } catch (error: any) {
+      throw new Error(`Failed to authenticate admin user: ${error.message}`);
+    }
   }
 
   /**
@@ -93,21 +155,160 @@ export class QuickAuth {
   }
 
   /**
-   * Get member auth token via magic link flow
-   * Uses Cognito directly (no email verification needed)
+   * Get member auth token
+   * Tries multiple approaches:
+   * 1. Environment variable MEMBER_TOKEN (pre-generated)
+   * 2. Password auth if MEMBER_EMAIL + MEMBER_PASSWORD configured
+   * 3. Magic link flow via email retrieval
    */
-  async getMemberToken(email: string): Promise<string> {
-    // Check cache first
-    const cached = this.tokenCache.get(email);
+  async getMemberToken(email?: string): Promise<string> {
+    // Option 1: Use pre-generated token from environment
+    if (process.env.MEMBER_TOKEN) {
+      return process.env.MEMBER_TOKEN;
+    }
+
+    // Check global cache - use 'member:email' as cache key
+    const memberEmail = email || process.env.MEMBER_EMAIL;
+    const cacheKey = `member:${memberEmail || 'default'}`;
+    const cached = globalTokenCache.get(cacheKey);
     if (cached && cached.expiresAt > Date.now()) {
       return cached.token;
     }
 
-    // TODO: Implement Cognito CUSTOM_AUTH flow
-    // For sprint, we'll use API calls that don't require auth
-    // or pass through admin token where needed
+    // Option 2: Password auth (if test member has password)
+    const memberPassword = process.env.MEMBER_PASSWORD;
+    const userPoolId = process.env.USER_POOL_ID;
+    const clientId = process.env.CLIENT_ID;
 
-    throw new Error('Member token generation not implemented - use admin token for sprint');
+    if (memberEmail && memberPassword && userPoolId && clientId) {
+      try {
+        const command = new AdminInitiateAuthCommand({
+          UserPoolId: userPoolId,
+          ClientId: clientId,
+          AuthFlow: AuthFlowType.ADMIN_USER_PASSWORD_AUTH,
+          AuthParameters: {
+            USERNAME: memberEmail,
+            PASSWORD: memberPassword,
+          },
+        });
+
+        const response = await this.cognitoClient.send(command);
+
+        if (response.AuthenticationResult?.AccessToken) {
+          const token = response.AuthenticationResult.AccessToken;
+          globalTokenCache.set(cacheKey, {
+            token,
+            expiresAt: Date.now() + 55 * 60 * 1000,
+          });
+          return token;
+        }
+      } catch (error: any) {
+        console.warn(`Password auth failed for ${memberEmail}: ${error.message}`);
+        // Fall through to magic link flow
+      }
+    }
+
+    // Option 3: Magic link flow via direct DynamoDB token retrieval
+    if (memberEmail && userPoolId && clientId && process.env.MAGIC_LINK_TABLE) {
+      return this.getMemberTokenViaMagicLink(memberEmail);
+    }
+
+    throw new Error(
+      'Member token not available. Configure one of:\n' +
+      '1. MEMBER_TOKEN (pre-generated token)\n' +
+      '2. MEMBER_EMAIL + MEMBER_PASSWORD + USER_POOL_ID + CLIENT_ID (password auth)\n' +
+      '3. MEMBER_EMAIL + USER_POOL_ID + CLIENT_ID + MAGIC_LINK_TABLE (magic link flow)'
+    );
+  }
+
+  /**
+   * Get member token via magic link flow
+   *
+   * For test automation, this bypasses email by:
+   * 1. Initiating CUSTOM_AUTH (which triggers magic link creation)
+   * 2. Querying the MagicLinkTokens DynamoDB table directly
+   * 3. Responding to the challenge with the token
+   */
+  private async getMemberTokenViaMagicLink(email: string): Promise<string> {
+    const userPoolId = process.env.USER_POOL_ID;
+    const clientId = process.env.CLIENT_ID;
+    const magicLinkTable = process.env.MAGIC_LINK_TABLE;
+
+    if (!userPoolId || !clientId) {
+      throw new Error('USER_POOL_ID and CLIENT_ID required for magic link flow');
+    }
+
+    if (!magicLinkTable) {
+      throw new Error('MAGIC_LINK_TABLE required for direct token retrieval');
+    }
+
+    // Step 1: Initiate CUSTOM_AUTH (this triggers the createAuthChallenge Lambda)
+    const initiateCommand = new InitiateAuthCommand({
+      ClientId: clientId,
+      AuthFlow: AuthFlowType.CUSTOM_AUTH,
+      AuthParameters: {
+        USERNAME: email,
+      },
+    });
+
+    const initiateResponse = await this.cognitoClient.send(initiateCommand);
+
+    if (!initiateResponse.Session) {
+      throw new Error('No session returned from CUSTOM_AUTH initiation');
+    }
+
+    // Step 2: Query DynamoDB for the magic link token
+    // The createAuthChallenge Lambda stores the token in the MagicLinkTokens table
+    const now = Math.floor(Date.now() / 1000);
+
+    const scanCommand = new ScanCommand({
+      TableName: magicLinkTable,
+      FilterExpression: 'email = :email AND expiresAt > :now',
+      ExpressionAttributeValues: {
+        ':email': { S: email },
+        ':now': { N: now.toString() },
+      },
+    });
+
+    const scanResult = await this.ddbClient.send(scanCommand);
+
+    if (!scanResult.Items || scanResult.Items.length === 0) {
+      throw new Error(`No valid magic link token found for ${email}`);
+    }
+
+    // Get the most recent token
+    const tokens = scanResult.Items.map(item => unmarshall(item));
+    tokens.sort((a, b) => (b.createdAtTimestamp || 0) - (a.createdAtTimestamp || 0));
+    const magicToken = tokens[0].token;
+
+    // Step 3: Respond to custom challenge with the token
+    const respondCommand = new RespondToAuthChallengeCommand({
+      ClientId: clientId,
+      ChallengeName: ChallengeNameType.CUSTOM_CHALLENGE,
+      Session: initiateResponse.Session,
+      ChallengeResponses: {
+        USERNAME: email,
+        ANSWER: magicToken,
+      },
+    });
+
+    const authResponse = await this.cognitoClient.send(respondCommand);
+
+    // Use IdToken instead of AccessToken because API handlers expect email claim
+    // which is only present in ID tokens, not access tokens
+    if (!authResponse.AuthenticationResult?.IdToken) {
+      throw new Error('No ID token from magic link authentication');
+    }
+
+    const token = authResponse.AuthenticationResult.IdToken;
+
+    // Cache the token in global cache
+    globalTokenCache.set(`member:${email}`, {
+      token,
+      expiresAt: Date.now() + 55 * 60 * 1000,
+    });
+
+    return token;
   }
 
   /**
@@ -214,7 +415,7 @@ export class QuickAuth {
       this.apiHelpers.setAuthToken(adminToken);
 
       // Soft delete the user
-      await this.apiHelpers.request('DELETE', `/admin/users/${userId}`);
+      await this.apiHelpers.makeRequest('DELETE', `/admin/users/${userId}`);
     } catch (error) {
       console.warn(`Failed to cleanup user ${userId}:`, error);
     }

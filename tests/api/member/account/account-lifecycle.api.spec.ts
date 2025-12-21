@@ -26,12 +26,8 @@ test.describe('Cancel Account', () => {
     });
 
     test('CANCEL-002: Rejects admin token (member only)', async () => {
-      if (!process.env.ADMIN_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.ADMIN_TOKEN);
+      const adminToken = await apiClient.getQuickAuth().getAdminToken();
+      apiClient.withAuth(adminToken);
 
       const response = await apiClient.cancelAccount();
 
@@ -40,12 +36,7 @@ test.describe('Cancel Account', () => {
     });
 
     test('CANCEL-003: Accepts member token', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       const response = await apiClient.cancelAccount();
 
@@ -81,12 +72,7 @@ test.describe('Cancel Account', () => {
     });
 
     test('CANCEL-006: Cancellation returns confirmation message', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       const response = await apiClient.cancelAccount();
 
@@ -97,12 +83,7 @@ test.describe('Cancel Account', () => {
     });
 
     test('CANCEL-007: Cancellation includes grace period info', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       const response = await apiClient.cancelAccount();
 
@@ -165,12 +146,7 @@ test.describe('Cancel Account', () => {
   test.describe('Idempotency', () => {
 
     test('CANCEL-011: Second cancellation is rejected', async () => {
-      if (!process.env.MEMBER_TOKEN) {
-        test.skip();
-        return;
-      }
-
-      apiClient.withAuth(process.env.MEMBER_TOKEN);
+      await apiClient.withMemberAuthAsync();
 
       // First cancellation
       const first = await apiClient.cancelAccount();
@@ -403,12 +379,7 @@ test.describe('Edge Cases', () => {
   });
 
   test('EDGE-CANCEL-003: Rapid sequential cancellation attempts', async () => {
-    if (!process.env.MEMBER_TOKEN) {
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(process.env.MEMBER_TOKEN);
+    await apiClient.withMemberAuthAsync();
 
     // Rapid fire cancellation requests
     const responses = await Promise.all([
@@ -426,12 +397,7 @@ test.describe('Edge Cases', () => {
   });
 
   test('EDGE-CANCEL-004: Cancellation response time', async () => {
-    if (!process.env.MEMBER_TOKEN) {
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(process.env.MEMBER_TOKEN);
+    await apiClient.withMemberAuthAsync();
     apiClient.startTimer();
 
     const response = await apiClient.cancelAccount();
