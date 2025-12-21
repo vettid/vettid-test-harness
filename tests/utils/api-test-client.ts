@@ -178,21 +178,21 @@ export class APITestClient extends APIHelpers {
     method: string,
     path: string,
     body?: any
-  ): Promise<{ status: number; body: any }> {
+  ): Promise<{ status: number; body: any; headers: Record<string, string> }> {
     const url = `${this.getApiUrl()}${path}`;
-    const headers: Record<string, string> = {
+    const reqHeaders: Record<string, string> = {
       'Content-Type': 'application/json',
       'Origin': 'https://admin.vettid.dev'
     };
 
     if (this.currentToken) {
-      headers['Authorization'] = `Bearer ${this.currentToken}`;
+      reqHeaders['Authorization'] = `Bearer ${this.currentToken}`;
     }
 
     try {
       const response = await this.getRequest().fetch(url, {
         method,
-        headers,
+        headers: reqHeaders,
         data: body
       });
 
@@ -200,12 +200,14 @@ export class APITestClient extends APIHelpers {
 
       return {
         status: response.status(),
-        body: responseBody
+        body: responseBody,
+        headers: response.headers()
       };
     } catch (error) {
       return {
         status: 500,
-        body: { error: String(error) }
+        body: { error: String(error) },
+        headers: {}
       };
     }
   }

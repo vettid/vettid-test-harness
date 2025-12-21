@@ -52,6 +52,7 @@ export class APIHelpers {
     return {
       status: response.status(),
       body: await response.json().catch(() => ({})),
+      headers: response.headers(),
     };
   }
 
@@ -250,6 +251,7 @@ export class APIHelpers {
     return {
       status: response.status(),
       body: await response.json().catch(() => ({})),
+      headers: response.headers(),
     };
   }
 }
