@@ -33,14 +33,7 @@ test.describe('Membership Lifecycle - Terms Management', () => {
   });
 
   test('MEM-LIFE-002: Get membership terms with valid token', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
     const response = await apiClient.getMembershipTerms();
 
     // May return 200 with terms or 404 if no terms exist
@@ -52,14 +45,7 @@ test.describe('Membership Lifecycle - Terms Management', () => {
   });
 
   test('MEM-LIFE-003: Admin can create membership terms', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
     const testTerms = `Test membership terms created at ${new Date().toISOString()}.
     By accepting these terms, you agree to abide by the rules and regulations of the organization.`;
 
@@ -74,14 +60,7 @@ test.describe('Membership Lifecycle - Terms Management', () => {
   });
 
   test('MEM-LIFE-004: Admin can list all membership terms versions', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
     const response = await apiClient.makeRequest('GET', '/admin/membership-terms');
 
     expect([200, 404]).toContain(response.status);
@@ -106,14 +85,7 @@ test.describe('Membership Lifecycle - Request Submission', () => {
   });
 
   test('MEM-LIFE-011: Request membership returns proper response', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
     const response = await apiClient.requestMembership();
 
     // Could be 200/201 (success), 400 (already member), 409 (pending request)
@@ -122,14 +94,7 @@ test.describe('Membership Lifecycle - Request Submission', () => {
   });
 
   test('MEM-LIFE-012: Get membership status after request', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
     const response = await apiClient.getMembershipStatus();
 
     expect([200, 404]).toContain(response.status);
@@ -157,14 +122,7 @@ test.describe('Membership Lifecycle - Admin Review', () => {
   });
 
   test('MEM-LIFE-021: Admin can list pending membership requests', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
     const response = await apiClient.listMembershipRequests();
 
     expect([200, 404]).toContain(response.status);
@@ -193,14 +151,7 @@ test.describe('Membership Lifecycle - Admin Review', () => {
   });
 
   test('MEM-LIFE-024: Approve nonexistent membership returns error', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
     const response = await apiClient.approveMembership('nonexistent-membership-id-12345');
 
     expect([404, 400]).toContain(response.status);
@@ -208,14 +159,7 @@ test.describe('Membership Lifecycle - Admin Review', () => {
   });
 
   test('MEM-LIFE-025: Deny nonexistent membership returns error', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
     const response = await apiClient.denyMembership('nonexistent-membership-id-12345', 'Test reason');
 
     expect([404, 400]).toContain(response.status);
@@ -223,14 +167,7 @@ test.describe('Membership Lifecycle - Admin Review', () => {
   });
 
   test('MEM-LIFE-026: Deny membership requires reason', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
     // Try to deny without reason (using empty string)
     const response = await apiClient.makeRequest('POST', '/admin/memberships/test-id/deny', {
       reason: ''
@@ -246,14 +183,7 @@ test.describe('Membership Lifecycle - Admin Review', () => {
 test.describe('Membership Lifecycle - Status Transitions', () => {
 
   test('MEM-LIFE-030: Cannot request membership twice while pending', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
 
     // First request
     const firstResponse = await apiClient.requestMembership();
@@ -268,14 +198,7 @@ test.describe('Membership Lifecycle - Status Transitions', () => {
   });
 
   test('MEM-LIFE-031: Already approved member cannot request again', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
 
     // Try to request membership
     const response = await apiClient.requestMembership();
@@ -291,14 +214,7 @@ test.describe('Membership Lifecycle - Status Transitions', () => {
 test.describe('Membership Lifecycle - Edge Cases', () => {
 
   test('MEM-LIFE-040: Empty membership request body', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
     const response = await apiClient.makeRequest('POST', '/account/membership/request', {});
 
     // Should accept empty body or return validation error, not server error
@@ -307,14 +223,7 @@ test.describe('Membership Lifecycle - Edge Cases', () => {
   });
 
   test('MEM-LIFE-041: Membership request with extra fields ignored', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
     const response = await apiClient.makeRequest('POST', '/account/membership/request', {
       extra_field: 'should be ignored',
       admin_override: true,
@@ -327,14 +236,7 @@ test.describe('Membership Lifecycle - Edge Cases', () => {
   });
 
   test('MEM-LIFE-042: Very long denial reason handled', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
     const longReason = 'A'.repeat(10000); // 10KB of text
 
     const response = await apiClient.denyMembership('test-id', longReason);
@@ -345,14 +247,7 @@ test.describe('Membership Lifecycle - Edge Cases', () => {
   });
 
   test('MEM-LIFE-043: Special characters in denial reason', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
     const specialReason = '<script>alert("xss")</script> & "quotes" \'apostrophes\' \n newlines';
 
     const response = await apiClient.denyMembership('test-id', specialReason);
@@ -367,14 +262,7 @@ test.describe('Membership Lifecycle - Edge Cases', () => {
 test.describe('Membership Lifecycle - Data Validation', () => {
 
   test('MEM-LIFE-050: Terms text length validation', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
 
     // Test empty terms
     const emptyResponse = await apiClient.createMembershipTerms('');
@@ -389,14 +277,7 @@ test.describe('Membership Lifecycle - Data Validation', () => {
   });
 
   test('MEM-LIFE-051: Terms with HTML/script tags', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
     const xssTerms = '<script>alert("xss")</script>These are the terms<img src="x" onerror="alert(1)">';
 
     const response = await apiClient.createMembershipTerms(xssTerms);
@@ -414,14 +295,7 @@ test.describe('Membership Lifecycle - Data Validation', () => {
   });
 
   test('MEM-LIFE-052: Unicode in membership terms', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
     const unicodeTerms = 'Terms with emoji 🎉 and Unicode: 日本語 العربية';
 
     const response = await apiClient.createMembershipTerms(unicodeTerms);
@@ -443,14 +317,7 @@ test.describe('Membership Lifecycle - Account Cancellation', () => {
   });
 
   test('MEM-LIFE-061: Cancel account endpoint exists', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
     const response = await apiClient.makeRequest('POST', '/account/cancel');
 
     // Should not be 404 (endpoint exists)
@@ -460,14 +327,7 @@ test.describe('Membership Lifecycle - Account Cancellation', () => {
   });
 
   test('MEM-LIFE-062: Cancel with confirmation field', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
     const response = await apiClient.makeRequest('POST', '/account/cancel', {
       confirm: false // Don't actually confirm
     });

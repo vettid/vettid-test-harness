@@ -33,14 +33,7 @@ test.describe('PIN Management - Status', () => {
   });
 
   test('PIN-002: Get PIN status with valid token', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
     const response = await apiClient.getPinStatus();
 
     // Should return status (enabled/disabled)
@@ -54,14 +47,7 @@ test.describe('PIN Management - Status', () => {
   });
 
   test('PIN-003: PIN status does not expose PIN value', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
     const response = await apiClient.getPinStatus();
 
     if (response.status === 200) {
@@ -87,14 +73,7 @@ test.describe('PIN Management - Enable', () => {
   });
 
   test('PIN-011: Enable PIN with valid 6-digit PIN', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
     const response = await apiClient.enablePin('123456');
 
     // May succeed, or may already be enabled
@@ -103,14 +82,7 @@ test.describe('PIN Management - Enable', () => {
   });
 
   test('PIN-012: Enable PIN with too short PIN rejected', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
     const response = await apiClient.enablePin('123');
 
     expect([400, 422]).toContain(response.status);
@@ -118,14 +90,7 @@ test.describe('PIN Management - Enable', () => {
   });
 
   test('PIN-013: Enable PIN with too long PIN rejected', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
     const response = await apiClient.enablePin('12345678901234567890');
 
     expect([400, 422]).toContain(response.status);
@@ -133,14 +98,7 @@ test.describe('PIN Management - Enable', () => {
   });
 
   test('PIN-014: Enable PIN with non-numeric rejected', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
     const response = await apiClient.enablePin('abcdef');
 
     expect([400, 422]).toContain(response.status);
@@ -148,14 +106,7 @@ test.describe('PIN Management - Enable', () => {
   });
 
   test('PIN-015: Enable PIN with empty value rejected', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
     const response = await apiClient.enablePin('');
 
     expect([400, 422]).toContain(response.status);
@@ -163,14 +114,7 @@ test.describe('PIN Management - Enable', () => {
   });
 
   test('PIN-016: Enable PIN already enabled returns conflict', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
 
     // First enable
     await apiClient.enablePin('123456');
@@ -196,14 +140,7 @@ test.describe('PIN Management - Update', () => {
   });
 
   test('PIN-021: Update PIN requires current PIN', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
     const response = await apiClient.makeRequest('POST', '/account/security/pin/update', {
       pin: '654321'
       // Missing current_pin
@@ -214,14 +151,7 @@ test.describe('PIN Management - Update', () => {
   });
 
   test('PIN-022: Update PIN with wrong current PIN rejected', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
     const response = await apiClient.updatePin('654321', '000000'); // Wrong current PIN
 
     // Should reject with wrong current PIN
@@ -230,14 +160,7 @@ test.describe('PIN Management - Update', () => {
   });
 
   test('PIN-023: Update PIN validates new PIN format', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
     const response = await apiClient.updatePin('abc', '123456'); // Invalid new PIN
 
     expect([400, 422]).toContain(response.status);
@@ -245,14 +168,7 @@ test.describe('PIN Management - Update', () => {
   });
 
   test('PIN-024: Update PIN with same value (no change)', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
     const response = await apiClient.updatePin('123456', '123456'); // Same PIN
 
     // May allow or reject same PIN update
@@ -273,14 +189,7 @@ test.describe('PIN Management - Disable', () => {
   });
 
   test('PIN-031: Disable PIN with valid token', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
     const response = await apiClient.disablePin();
 
     // May succeed or may not have PIN enabled
@@ -289,14 +198,7 @@ test.describe('PIN Management - Disable', () => {
   });
 
   test('PIN-032: Disable PIN when not enabled', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
 
     // First disable
     await apiClient.disablePin();
@@ -310,14 +212,7 @@ test.describe('PIN Management - Disable', () => {
   });
 
   test('PIN-033: Disable PIN requires current PIN verification', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
 
     // Try to disable with wrong PIN
     const response = await apiClient.makeRequest('POST', '/account/security/pin/disable', {
@@ -334,14 +229,7 @@ test.describe('PIN Management - Disable', () => {
 test.describe('PIN Management - Security', () => {
 
   test('PIN-040: Common PINs should be warned or rejected', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
 
     const commonPins = ['000000', '111111', '123456', '654321'];
 
@@ -355,14 +243,7 @@ test.describe('PIN Management - Security', () => {
   });
 
   test('PIN-041: Sequential PIN rejection', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
     const response = await apiClient.enablePin('123456');
 
     // May reject sequential patterns or accept
@@ -370,14 +251,7 @@ test.describe('PIN Management - Security', () => {
   });
 
   test('PIN-042: PIN not logged in error responses', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
     const response = await apiClient.updatePin('654321', '123456');
 
     // Error message should not contain PIN values
@@ -389,14 +263,7 @@ test.describe('PIN Management - Security', () => {
   });
 
   test('PIN-043: Rate limiting on PIN operations', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
 
     // Try many wrong PIN updates rapidly
     const responses = [];
@@ -411,13 +278,6 @@ test.describe('PIN Management - Security', () => {
   });
 
   test('PIN-044: Brute force protection', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
     // Document expected behavior - system should lock out after N failed attempts
 
     console.log('✓ PIN-044: Brute force protection (documented behavior)');
@@ -428,14 +288,7 @@ test.describe('PIN Management - Security', () => {
 test.describe('PIN Management - Edge Cases', () => {
 
   test('PIN-050: PIN with leading zeros', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
     const response = await apiClient.enablePin('000123');
 
     // Should handle leading zeros correctly
@@ -444,14 +297,7 @@ test.describe('PIN Management - Edge Cases', () => {
   });
 
   test('PIN-051: PIN as integer vs string', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
 
     // Send PIN as integer
     const response = await apiClient.makeRequest('POST', '/account/security/pin/enable', {
@@ -464,14 +310,7 @@ test.describe('PIN Management - Edge Cases', () => {
   });
 
   test('PIN-052: PIN with spaces', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
     const response = await apiClient.enablePin('12 34 56');
 
     expect([400, 422]).toContain(response.status);
@@ -479,14 +318,7 @@ test.describe('PIN Management - Edge Cases', () => {
   });
 
   test('PIN-053: PIN with special characters', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
     const response = await apiClient.enablePin('12!@34');
 
     expect([400, 422]).toContain(response.status);
@@ -494,14 +326,7 @@ test.describe('PIN Management - Edge Cases', () => {
   });
 
   test('PIN-054: Unicode in PIN rejected', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
     const response = await apiClient.enablePin('١٢٣٤٥٦'); // Arabic numerals
 
     expect([400, 422]).toContain(response.status);
@@ -513,14 +338,7 @@ test.describe('PIN Management - Edge Cases', () => {
 test.describe('PIN Management - State Verification', () => {
 
   test('PIN-060: Status reflects enable operation', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
 
     // Enable PIN
     const enableResp = await apiClient.enablePin('123456');
@@ -537,14 +355,7 @@ test.describe('PIN Management - State Verification', () => {
   });
 
   test('PIN-061: Status reflects disable operation', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
 
     // Disable PIN
     await apiClient.disablePin();
@@ -563,14 +374,7 @@ test.describe('PIN Management - State Verification', () => {
 test.describe('PIN Management - Response Format', () => {
 
   test('PIN-070: Enable response is JSON', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
     const response = await apiClient.enablePin('123456');
 
     expect(typeof response.body).toBe('object');
@@ -578,14 +382,7 @@ test.describe('PIN Management - Response Format', () => {
   });
 
   test('PIN-071: Disable response is JSON', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
     const response = await apiClient.disablePin();
 
     expect(typeof response.body).toBe('object');
@@ -593,14 +390,7 @@ test.describe('PIN Management - Response Format', () => {
   });
 
   test('PIN-072: Update response is JSON', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
     const response = await apiClient.updatePin('654321', '123456');
 
     expect(typeof response.body).toBe('object');
@@ -608,14 +398,7 @@ test.describe('PIN Management - Response Format', () => {
   });
 
   test('PIN-073: Status response is JSON', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
     const response = await apiClient.getPinStatus();
 
     expect(typeof response.body).toBe('object');

@@ -24,18 +24,11 @@ test.beforeEach(async ({ request }) => {
 test.describe('Member Auth Flow - Token Behavior', () => {
 
   test('MAUTH-001: Fresh token allows member endpoint access', async () => {
-    // Get admin token (which is also a member in the system)
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    // Get member token (admin and member use separate Cognito pools)
+    await apiClient.withMemberAuthAsync();
     const response = await apiClient.getMembershipStatus();
 
-    // Admin should have member access
+    // Member token should work for member endpoints
     expect([200, 404]).toContain(response.status);
     console.log(`✓ MAUTH-001: Fresh token access: status ${response.status}`);
   });
@@ -99,19 +92,13 @@ test.describe('Member Auth Flow - Endpoint Protection Matrix', () => {
   });
 
   test('MAUTH-011: Member endpoints accessible with valid token', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    // Use member token (admin tokens are from a different Cognito pool)
+    await apiClient.withMemberAuthAsync();
 
     // These should return success or expected business logic errors (not auth errors)
     const readEndpoints = [
       { method: 'GET', path: '/account/membership/status' },
-      { method: 'GET', path: '/account/pin/status' },
+      { method: 'GET', path: '/account/security/pin/status' },
     ];
 
     for (const endpoint of readEndpoints) {
@@ -126,36 +113,23 @@ test.describe('Member Auth Flow - Endpoint Protection Matrix', () => {
 test.describe('Member Auth Flow - Cross-Role Access', () => {
 
   test('MAUTH-020: Admin token can access admin endpoints', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withAdminAuthAsync();
     const response = await apiClient.listRegistrations();
 
     expect(response.status).toBe(200);
     console.log('✓ MAUTH-020: Admin token works for admin endpoints');
   });
 
-  test('MAUTH-021: Admin token includes member access', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
+  test('MAUTH-021: Admin and member use separate auth pools', async () => {
+    // VettID uses dual Cognito pools - admin tokens cannot access member endpoints
+    await apiClient.withAdminAuthAsync();
 
-    apiClient.withAuth(adminToken);
-
-    // Admin should be able to access member endpoints
+    // Admin token should NOT work for member endpoints (different pool)
     const memberResponse = await apiClient.getPinStatus();
 
-    // Should not be 401 (admin has member capabilities)
-    expect(memberResponse.status).not.toBe(401);
-    console.log(`✓ MAUTH-021: Admin has member access: ${memberResponse.status}`);
+    // Should be 401 (admin tokens are from a different Cognito pool)
+    expect(memberResponse.status).toBe(401);
+    console.log('✓ MAUTH-021: Admin and member use separate pools (expected behavior)');
   });
 
   test('MAUTH-022: Member cannot access admin endpoints', async () => {
@@ -176,14 +150,7 @@ test.describe('Member Auth Flow - Cross-Role Access', () => {
 test.describe('Member Auth Flow - Session Security', () => {
 
   test('MAUTH-030: Sequential requests with same token work', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withMemberAuthAsync();
 
     // Make multiple sequential requests
     const responses = [];
@@ -199,14 +166,7 @@ test.describe('Member Auth Flow - Session Security', () => {
   });
 
   test('MAUTH-031: Parallel requests with same token work', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
-    apiClient.withAuth(adminToken);
+    await apiClient.withMemberAuthAsync();
 
     // Make multiple parallel requests
     const promises = [
@@ -225,15 +185,8 @@ test.describe('Member Auth Flow - Session Security', () => {
   });
 
   test('MAUTH-032: Token not cached across sessions', async () => {
-    const adminToken = process.env.ADMIN_TOKEN;
-    if (!adminToken) {
-      console.log('⚠ Skipped - ADMIN_TOKEN required');
-      test.skip();
-      return;
-    }
-
     // First request with token
-    apiClient.withAuth(adminToken);
+    await apiClient.withMemberAuthAsync();
     const firstResponse = await apiClient.getPinStatus();
     expect(firstResponse.status).not.toBe(401);
 
