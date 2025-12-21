@@ -242,58 +242,106 @@ export class QuickAuth {
       throw new Error('MAGIC_LINK_TABLE required for direct token retrieval');
     }
 
-    // Step 1: Initiate CUSTOM_AUTH (this triggers the createAuthChallenge Lambda)
-    const initiateCommand = new InitiateAuthCommand({
-      ClientId: clientId,
-      AuthFlow: AuthFlowType.CUSTOM_AUTH,
-      AuthParameters: {
-        USERNAME: email,
-      },
-    });
+    // Retry logic wraps the entire auth flow to handle race conditions
+    // when parallel tests consume tokens before we can use them
+    const maxAttempts = 5;
+    let lastError: Error | undefined;
+    let authResponse;
 
-    const initiateResponse = await this.cognitoClient.send(initiateCommand);
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      try {
+        // Record timestamp BEFORE initiating auth
+        const beforeInitTimestamp = Math.floor(Date.now() / 1000) - 2; // 2 second buffer
 
-    if (!initiateResponse.Session) {
-      throw new Error('No session returned from CUSTOM_AUTH initiation');
+        // Step 1: Initiate CUSTOM_AUTH (triggers createAuthChallenge Lambda)
+        const initiateCommand = new InitiateAuthCommand({
+          ClientId: clientId,
+          AuthFlow: AuthFlowType.CUSTOM_AUTH,
+          AuthParameters: {
+            USERNAME: email,
+          },
+        });
+
+        const initiateResponse = await this.cognitoClient.send(initiateCommand);
+
+        if (!initiateResponse.Session) {
+          throw new Error('No session returned from CUSTOM_AUTH initiation');
+        }
+
+        // Step 2: Query DynamoDB for the magic link token
+        const now = Math.floor(Date.now() / 1000);
+
+        // First, try to find a token created after we initiated auth
+        let scanResult = await this.ddbClient.send(new ScanCommand({
+          TableName: magicLinkTable,
+          FilterExpression: 'email = :email AND expiresAt > :now AND createdAtTimestamp >= :since',
+          ExpressionAttributeValues: {
+            ':email': { S: email },
+            ':now': { N: now.toString() },
+            ':since': { N: beforeInitTimestamp.toString() },
+          },
+        }));
+
+        // If no tokens found in our window, try fallback scan for any valid token
+        if (!scanResult.Items || scanResult.Items.length === 0) {
+          scanResult = await this.ddbClient.send(new ScanCommand({
+            TableName: magicLinkTable,
+            FilterExpression: 'email = :email AND expiresAt > :now',
+            ExpressionAttributeValues: {
+              ':email': { S: email },
+              ':now': { N: now.toString() },
+            },
+          }));
+        }
+
+        if (!scanResult.Items || scanResult.Items.length === 0) {
+          // No token found - another test likely consumed it
+          // Throw a specific error to trigger retry with new InitiateAuth
+          throw new Error('TOKEN_CONSUMED');
+        }
+
+        // Sort by timestamp and use most recent token
+        const tokens = scanResult.Items.map(item => unmarshall(item));
+        tokens.sort((a, b) => (b.createdAtTimestamp || 0) - (a.createdAtTimestamp || 0));
+        const magicToken = tokens[0].token;
+
+        // Step 3: Respond to custom challenge with the token
+        const respondCommand = new RespondToAuthChallengeCommand({
+          ClientId: clientId,
+          ChallengeName: ChallengeNameType.CUSTOM_CHALLENGE,
+          Session: initiateResponse.Session,
+          ChallengeResponses: {
+            USERNAME: email,
+            ANSWER: magicToken,
+          },
+        });
+
+        authResponse = await this.cognitoClient.send(respondCommand);
+        break; // Success!
+
+      } catch (error: any) {
+        lastError = error;
+        const isRetryable = error.message === 'TOKEN_CONSUMED' ||
+                           error.name === 'NotAuthorizedException';
+
+        if (isRetryable && attempt < maxAttempts - 1) {
+          console.log(`Magic link auth attempt ${attempt + 1} failed (${error.message}), retrying...`);
+          // Wait before retry with exponential backoff (500ms, 1s, 1.5s, 2s)
+          await new Promise(resolve => setTimeout(resolve, 500 * (attempt + 1)));
+          continue;
+        }
+
+        // Non-retryable error or exhausted retries
+        if (error.message === 'TOKEN_CONSUMED') {
+          throw new Error(`No valid magic link token found for ${email} after ${maxAttempts} attempts`);
+        }
+        throw error;
+      }
     }
 
-    // Step 2: Query DynamoDB for the magic link token
-    // The createAuthChallenge Lambda either creates a new token OR reuses an existing valid one.
-    // So we need to find ANY valid (unexpired) token for this email.
-    const now = Math.floor(Date.now() / 1000);
-
-    const scanCommand = new ScanCommand({
-      TableName: magicLinkTable,
-      FilterExpression: 'email = :email AND expiresAt > :now',
-      ExpressionAttributeValues: {
-        ':email': { S: email },
-        ':now': { N: now.toString() },
-      },
-    });
-
-    const scanResult = await this.ddbClient.send(scanCommand);
-
-    if (!scanResult.Items || scanResult.Items.length === 0) {
-      throw new Error(`No valid magic link token found for ${email}`);
+    if (!authResponse) {
+      throw lastError || new Error('Failed to authenticate after retries');
     }
-
-    // Get the most recent token (Lambda may have reused this one)
-    const tokens = scanResult.Items.map(item => unmarshall(item));
-    tokens.sort((a, b) => (b.createdAtTimestamp || 0) - (a.createdAtTimestamp || 0));
-    const magicToken = tokens[0].token;
-
-    // Step 3: Respond to custom challenge with the token
-    const respondCommand = new RespondToAuthChallengeCommand({
-      ClientId: clientId,
-      ChallengeName: ChallengeNameType.CUSTOM_CHALLENGE,
-      Session: initiateResponse.Session,
-      ChallengeResponses: {
-        USERNAME: email,
-        ANSWER: magicToken,
-      },
-    });
-
-    const authResponse = await this.cognitoClient.send(respondCommand);
 
     // Use IdToken instead of AccessToken because API handlers expect email claim
     // which is only present in ID tokens, not access tokens
