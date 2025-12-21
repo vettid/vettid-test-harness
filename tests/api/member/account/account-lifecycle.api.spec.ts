@@ -191,7 +191,7 @@ test.describe('Account Status After Cancellation', () => {
 
     apiClient.withAuth(process.env.CANCELLED_MEMBER_TOKEN);
 
-    const response = await apiClient.enablePin('1234');
+    const response = await apiClient.enablePin('1397');
 
     // Should be rejected
     await apiClient.expectStatusOneOf(response, [400, 401, 403]);

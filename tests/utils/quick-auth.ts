@@ -258,7 +258,8 @@ export class QuickAuth {
     }
 
     // Step 2: Query DynamoDB for the magic link token
-    // The createAuthChallenge Lambda stores the token in the MagicLinkTokens table
+    // The createAuthChallenge Lambda either creates a new token OR reuses an existing valid one.
+    // So we need to find ANY valid (unexpired) token for this email.
     const now = Math.floor(Date.now() / 1000);
 
     const scanCommand = new ScanCommand({
@@ -276,7 +277,7 @@ export class QuickAuth {
       throw new Error(`No valid magic link token found for ${email}`);
     }
 
-    // Get the most recent token
+    // Get the most recent token (Lambda may have reused this one)
     const tokens = scanResult.Items.map(item => unmarshall(item));
     tokens.sort((a, b) => (b.createdAtTimestamp || 0) - (a.createdAtTimestamp || 0));
     const magicToken = tokens[0].token;

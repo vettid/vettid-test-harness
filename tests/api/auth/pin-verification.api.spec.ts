@@ -19,7 +19,7 @@ test.describe('PIN Security System', () => {
 
     test('PIN-001: Enable PIN with valid 4-digit PIN', async () => {
       await apiClient.withMemberAuthAsync();
-      const response = await apiClient.enablePin('1234');
+      const response = await apiClient.enablePin('1397');
 
       if (response.status === 200 || response.status === 201) {
         expect(response.body.message || response.body.success).toBeTruthy();
@@ -115,14 +115,14 @@ test.describe('PIN Security System', () => {
       await apiClient.disablePin();
 
       // Enable PIN
-      const firstEnable = await apiClient.enablePin('1234');
+      const firstEnable = await apiClient.enablePin('1397');
       if (firstEnable.status !== 200 && firstEnable.status !== 201) {
         test.skip();
         return;
       }
 
       // Try to enable again
-      const secondEnable = await apiClient.enablePin('5678');
+      const secondEnable = await apiClient.enablePin('5831');
 
       expect(secondEnable.status).toBe(400);
       expect(secondEnable.body.error).toMatch(/already.*enabled/i);
@@ -131,38 +131,42 @@ test.describe('PIN Security System', () => {
     test('PIN-010: Enable PIN requires authentication', async () => {
       apiClient.withoutAuth();
 
-      const response = await apiClient.enablePin('1234');
+      const response = await apiClient.enablePin('1397');
 
       expect(response.status).toBe(401);
     });
 
-    test('PIN-011: PIN with leading zeros is valid', async () => {
+    test('PIN-011: PIN with all zeros is rejected as weak', async () => {
       await apiClient.withMemberAuthAsync();
       await apiClient.disablePin();
 
       const response = await apiClient.enablePin('0000');
 
-      // Leading zeros should be valid
-      await apiClient.expectStatusOneOf(response, [200, 201]);
+      // All same digits is a weak PIN - should be rejected
+      expect(response.status).toBe(400);
+      expect(response.body.message).toContain('weak');
     });
 
-    test('PIN-012: PIN with sequential numbers is allowed', async () => {
+    test('PIN-012: PIN with sequential numbers is rejected as weak', async () => {
       await apiClient.withMemberAuthAsync();
       await apiClient.disablePin();
 
-      // Sequential PINs like 1234 might be weak but should be allowed
-      const response = await apiClient.enablePin('1234');
+      // Sequential PINs like 1234 are weak and rejected
+      const response = await apiClient.enablePin('1397');
 
-      await apiClient.expectStatusOneOf(response, [200, 201]);
+      expect(response.status).toBe(400);
+      expect(response.body.message).toContain('weak');
     });
 
-    test('PIN-013: PIN with repeated digits is allowed', async () => {
+    test('PIN-013: PIN with repeated digits is rejected as weak', async () => {
       await apiClient.withMemberAuthAsync();
       await apiClient.disablePin();
 
       const response = await apiClient.enablePin('1111');
 
-      await apiClient.expectStatusOneOf(response, [200, 201]);
+      // Repeated digits is a weak PIN - should be rejected
+      expect(response.status).toBe(400);
+      expect(response.body.message).toContain('weak');
     });
   });
 
@@ -172,11 +176,11 @@ test.describe('PIN Security System', () => {
       await apiClient.withMemberAuthAsync();
 
       // Enable PIN first
-      const enableResponse = await apiClient.enablePin('1234');
+      const enableResponse = await apiClient.enablePin('1397');
       if (enableResponse.status !== 200 && enableResponse.status !== 201) {
         // Try disabling and re-enabling
         await apiClient.disablePin();
-        await apiClient.enablePin('1234');
+        await apiClient.enablePin('1397');
       }
 
       // Now disable
@@ -217,10 +221,10 @@ test.describe('PIN Security System', () => {
 
       // Enable PIN first
       await apiClient.disablePin();
-      await apiClient.enablePin('1234');
+      await apiClient.enablePin('1397');
 
       // Update to new PIN
-      const response = await apiClient.updatePin('5678', '1234');
+      const response = await apiClient.updatePin('5831', '1234');
 
       await apiClient.expectStatusOneOf(response, [200, 201, 400]);
     });
@@ -230,11 +234,11 @@ test.describe('PIN Security System', () => {
 
       // Enable PIN first
       await apiClient.disablePin();
-      await apiClient.enablePin('1234');
+      await apiClient.enablePin('1397');
 
       // Try to update without current PIN
       const response = await apiClient.makeRequest('POST', '/account/security/pin/update', {
-        pin: '5678'
+        pin: '5831'
         // Missing current_pin
       });
 
@@ -246,10 +250,10 @@ test.describe('PIN Security System', () => {
 
       // Enable PIN first
       await apiClient.disablePin();
-      await apiClient.enablePin('1234');
+      await apiClient.enablePin('1397');
 
       // Try to update with wrong current PIN
-      const response = await apiClient.updatePin('5678', '9999');
+      const response = await apiClient.updatePin('5831', '9999');
 
       expect(response.status).toBe(400);
       expect(response.body.message).toMatch(/current.*pin|invalid.*pin|incorrect/i);
@@ -262,7 +266,7 @@ test.describe('PIN Security System', () => {
       await apiClient.disablePin();
 
       // Try to update
-      const response = await apiClient.updatePin('5678', '1234');
+      const response = await apiClient.updatePin('5831', '1234');
 
       expect(response.status).toBe(400);
       expect(response.body.message).toMatch(/not.*enabled/i);
@@ -273,7 +277,7 @@ test.describe('PIN Security System', () => {
 
       // Enable PIN first
       await apiClient.disablePin();
-      await apiClient.enablePin('1234');
+      await apiClient.enablePin('1397');
 
       // Try to update with invalid new PIN
       const response = await apiClient.updatePin('abc', '1234');
@@ -284,7 +288,7 @@ test.describe('PIN Security System', () => {
     test('PIN-022: Update PIN requires authentication', async () => {
       apiClient.withoutAuth();
 
-      const response = await apiClient.updatePin('5678', '1234');
+      const response = await apiClient.updatePin('5831', '1234');
 
       expect(response.status).toBe(401);
     });
@@ -297,7 +301,7 @@ test.describe('PIN Security System', () => {
 
       // Enable PIN
       await apiClient.disablePin();
-      await apiClient.enablePin('1234');
+      await apiClient.enablePin('1397');
 
       const response = await apiClient.getPinStatus();
 
@@ -380,7 +384,7 @@ test.describe('PIN Security System', () => {
 
       // Enable a PIN
       await apiClient.disablePin();
-      await apiClient.enablePin('1234');
+      await apiClient.enablePin('1397');
 
       // Get status - should not return PIN or hash
       const status = await apiClient.getPinStatus();
@@ -394,7 +398,7 @@ test.describe('PIN Security System', () => {
 
       // Enable PIN
       await apiClient.disablePin();
-      await apiClient.enablePin('1234');
+      await apiClient.enablePin('1397');
 
       // Measure response times for correct and incorrect PINs
       const timings: { correct: number[]; incorrect: number[] } = {
@@ -405,15 +409,15 @@ test.describe('PIN Security System', () => {
       for (let i = 0; i < 5; i++) {
         // Correct PIN
         const startCorrect = Date.now();
-        await apiClient.updatePin('5678', '1234');
+        await apiClient.updatePin('5831', '1234');
         timings.correct.push(Date.now() - startCorrect);
 
         // Reset
-        await apiClient.updatePin('1234', '5678');
+        await apiClient.updatePin('1234', '5831');
 
         // Incorrect PIN
         const startIncorrect = Date.now();
-        await apiClient.updatePin('5678', '9999');
+        await apiClient.updatePin('5831', '9999');
         timings.incorrect.push(Date.now() - startIncorrect);
       }
 
@@ -436,7 +440,7 @@ test.describe('PIN Security System', () => {
       await apiClient.withMemberAuthAsync();
       await apiClient.disablePin();
 
-      const response = await apiClient.enablePin('1234');
+      const response = await apiClient.enablePin('1397');
 
       if (response.status === 200 || response.status === 201) {
         // Response might include timestamp
