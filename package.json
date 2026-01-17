@@ -17,7 +17,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "AGPL-3.0-or-later",
   "description": "Automated test harness for VettID application using Playwright",
   "devDependencies": {
     "@playwright/test": "^1.56.1",
