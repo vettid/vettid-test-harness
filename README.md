@@ -1,5 +1,7 @@
 # VettID Test Harness
 
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+
 Comprehensive automated testing suite for the VettID application using Playwright and AWS SES email testing infrastructure.
 
 ## Overview
@@ -416,12 +418,18 @@ When adding new tests:
 3. Update this README with new test coverage
 4. Ensure tests are idempotent and don't depend on test order
 
-## Support
+## Related Repositories
 
-- **Project Location**: `/home/al/vettid-test-harness/`
-- **Email Infrastructure**: `/home/al/vettid-test-infra/`
-- **Application Code**: `/home/al/vettid-dev/`
+- [vettid-dev](https://github.com/vettid/vettid-dev) - Backend infrastructure
+- [vettid-android](https://github.com/vettid/vettid-android) - Android app
+- [vettid-ios](https://github.com/vettid/vettid-ios) - iOS app
+- [vettid.org](https://github.com/vettid/vettid.org) - Website
 
 ## License
 
-MIT
+AGPL-3.0-or-later - See [LICENSE](LICENSE) for details.
+
+## Links
+
+- Website: [vettid.org](https://vettid.org)
+- Documentation: [docs.vettid.dev](https://docs.vettid.dev)
