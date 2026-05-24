@@ -175,7 +175,7 @@ tests/
 **Root Cause**:
 - Rate limit: 100 requests/hour per email
 - Tests hitting same endpoint rapidly
-- Whitelist exists: `['al@liebl.me']`
+- Whitelist exists: `['<developer-email>']`
 
 **Impact**: Tests fail but API is working correctly
 
